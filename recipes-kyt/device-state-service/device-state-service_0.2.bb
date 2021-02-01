@@ -27,4 +27,14 @@ do_compile_prepend() {
 
 
 
+inherit systemd
+SYSTEMD_AUTO_ENABLE = "enable"
+SYSTEMD_SERVICE_${PN} = "${BPN}.service"
 
+SRC_URI_append = " file://${BPN}.service "
+FILES_${PN} += "${systemd_unitdir}/system/${BPN}.service"
+
+do_install_append() {
+  install -d ${D}/${systemd_unitdir}/system
+  install -m 0644 ${WORKDIR}/${BPN}.service ${D}/${systemd_unitdir}/system
+}

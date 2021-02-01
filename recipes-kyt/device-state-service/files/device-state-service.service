@@ -1,0 +1,12 @@
+[Unit]
+Description=KYT Device State Service
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/bin/device-state-service
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
