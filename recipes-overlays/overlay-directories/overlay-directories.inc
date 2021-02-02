@@ -12,8 +12,3 @@ IOTEDGE_OVERLAY_RUN_ROOT_DIR ?= "/data"
 IOTEDGE_OVERLAY_RUN_LOWER_DIR ?= "/var/lib/iotedge"
 IOTEDGE_OVERLAY_RUN_UPPER_DIR ?= "/data/iotedge/var/lib/iotedge"
 IOTEDGE_OVERLAY_RUN_WORK_DIR ?= "/data/.overlay/iotedge-work/var/lib/iotedge"
-
-JOURNAL_OVERLAY_RUN_ROOT_DIR ?= "/data"
-JOURNAL_OVERLAY_RUN_LOWER_DIR ?= "/run/log/journal"
-JOURNAL_OVERLAY_RUN_UPPER_DIR ?= "/data/journal/run/log/journal"
-JOURNAL_OVERLAY_RUN_WORK_DIR ?= "/data/.overlay/journal-work/run/log/journal"
