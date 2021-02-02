@@ -1,0 +1,4 @@
+{
+    "data-root": "/data/docker/var/lib/docker",
+    "dns": ["1.1.1.1"]
+}
