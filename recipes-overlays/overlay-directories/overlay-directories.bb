@@ -19,7 +19,7 @@ SYSTEMD_AUTO_ENABLE = "enable"
 do_install() {
     install -d ${D}${bindir}
     install -d ${D}${systemd_system_unitdir}
-   
+    
     cat <<EOF > ${D}${CREATE_OVERLAY_DIRECTORIES_SCRIPT}
 #!/bin/sh
 # create docker overlay directories
