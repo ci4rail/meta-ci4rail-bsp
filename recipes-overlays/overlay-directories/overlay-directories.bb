@@ -27,12 +27,18 @@ mkdir -p ${DOCKER_OVERLAY_CONFIG_ROOT_DIR}
 mkdir -p ${DOCKER_OVERLAY_CONFIG_UPPER_DIR}
 mkdir -p ${DOCKER_OVERLAY_CONFIG_WORK_DIR}
 # create iotedge overlay directories
+# iotedge config
 mkdir -p ${IOTEDGE_OVERLAY_CONFIG_ROOT_DIR}
 mkdir -p ${IOTEDGE_OVERLAY_CONFIG_UPPER_DIR}
 mkdir -p ${IOTEDGE_OVERLAY_CONFIG_WORK_DIR}
+# iotedge run
+mkdir -p ${IOTEDGE_OVERLAY_RUN_ROOT_DIR}
+mkdir -p ${IOTEDGE_OVERLAY_RUN_UPPER_DIR}
+mkdir -p ${IOTEDGE_OVERLAY_RUN_WORK_DIR}
 # mount overlays
 mount -t overlay overlay -o lowerdir=${DOCKER_OVERLAY_CONFIG_LOWER_DIR},upperdir=${DOCKER_OVERLAY_CONFIG_UPPER_DIR},workdir=${DOCKER_OVERLAY_CONFIG_WORK_DIR} ${DOCKER_OVERLAY_CONFIG_LOWER_DIR}
 mount -t overlay overlay -o lowerdir=${IOTEDGE_OVERLAY_CONFIG_LOWER_DIR},upperdir=${IOTEDGE_OVERLAY_CONFIG_UPPER_DIR},workdir=${IOTEDGE_OVERLAY_CONFIG_WORK_DIR} ${IOTEDGE_OVERLAY_CONFIG_LOWER_DIR}
+mount -t overlay overlay -o lowerdir=${IOTEDGE_OVERLAY_RUN_LOWER_DIR},upperdir=${IOTEDGE_OVERLAY_RUN_UPPER_DIR},workdir=${IOTEDGE_OVERLAY_RUN_WORK_DIR} ${IOTEDGE_OVERLAY_RUN_LOWER_DIR}
 EOF
     chmod +x ${D}${CREATE_OVERLAY_DIRECTORIES_SCRIPT}
     install -m 0644 ${WORKDIR}/overlay-directories.service ${D}${systemd_system_unitdir}
