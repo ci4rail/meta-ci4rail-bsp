@@ -1,8 +1,11 @@
 [Unit]
 Description=KYT Device Info Static Service
+After=network-online.target
+Requires=network-online.target
 
 [Service]
-Type=simple
+Type=oneshot
+RemainAfterExit=no
 User=root
 Group=root
 ExecStart=/usr/bin/kyt-dlm-devinfo-static

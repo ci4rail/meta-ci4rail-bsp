@@ -25,9 +25,8 @@ do_compile_prepend() {
         dep init && dep ensure -v )
 }
 
-
-
 inherit systemd
+
 SYSTEMD_AUTO_ENABLE = "enable"
 SYSTEMD_SERVICE_${PN} = "${BPN}.service"
 
