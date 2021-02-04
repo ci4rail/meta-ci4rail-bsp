@@ -1,21 +1,21 @@
 inherit systemd
 inherit go
 
-DESCRIPTION = "KYT Device Info Static Service"
+DESCRIPTION = "KYT Device Status Service"
 
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
 
 DEPENDS += "go-dep-native"
 GO_LINKSHARED = ""
-GO_IMPORT = "github.com/ci4rail/kyt/kyt-dlm-devinfo-static"
-SRC_URI = "git://github.com/ci4rail/kyt/;protocol=https;branch=main;subpath=kyt-dlm-devinfo-static"
-SRC_URI += "file://kyt-dlm-devinfo-static.service"
+GO_IMPORT = "github.com/ci4rail/kyt/device-state-service"
+SRC_URI = "git://github.com/ci4rail/kyt/;protocol=https;branch=main;subpath=device-state-service"
+SRC_URI += "file://device-state-service.service"
 
 SRCREV = "${AUTOREV}"
 
 SYSTEMD_AUTO_ENABLE = "enable"
-SYSTEMD_SERVICE_${PN} = "kyt-dlm-devinfo-static.service"
+SYSTEMD_SERVICE_${PN} = "device-state-service.service"
 REQUIRED_DISTRO_FEATURES= "systemd"
 
 do_compile() {
@@ -27,10 +27,10 @@ do_compile() {
 
 do_install() {
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/kyt-dlm-devinfo-static.service ${D}${systemd_system_unitdir}
+    install -m 0644 ${WORKDIR}/device-state-service.service ${D}${systemd_system_unitdir}
 
     install -d ${D}${bindir}
-    install -m 0755 "${WORKDIR}/build/bin/kyt-dlm-devinfo-static" "${D}/${bindir}/kyt-dlm-devinfo-static"
+    install -m 0755 "${WORKDIR}/build/bin/device-state-service" "${D}/${bindir}/device-state-service"
 }
 
-FILES_${PN} += "${systemd_system_unitdir}/kyt-dlm-devinfo-static.service"
+FILES_${PN} += "${systemd_system_unitdir}/device-state-service.service"
