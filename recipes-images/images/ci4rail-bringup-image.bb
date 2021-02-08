@@ -36,20 +36,38 @@ IMAGE_INSTALL += " \
     packagegroup-boot \
     packagegroup-basic \
     packagegroup-base-tdx-cli \
+    packagegroup-benchmark-tdx-cli \
+    packagegroup-devel-tdx-cli \
     packagegroup-machine-tdx-cli \
+    packagegroup-networking-tdx-cli \
     packagegroup-wifi-tdx-cli \
     packagegroup-wifi-fw-tdx-cli \
     udev-extraconf \
     ${CONMANPKGS} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'timestamp-service systemd-analyze', '', d)} \
-    mmc-utils-cos \
-    serial-test \
+    bzip2 \
+    e2fsprogs \
+    e2fsprogs-resize2fs \
+    e2fsprogs-tune2fs \
     ethtool \
+    gpsd \
+    grep \
+    lsof \
+    minicom \
+    mmc-utils-cos \
+    pciutils \
+    phytool \
+    procps \
+    ${RANDOM_HELPER} \
+    stress-ng \
+    sqlite3 \
+    tdx-oak-sensors \
+    ${USB_GADGET} \
+    util-linux \
     cpuburn-a53 \
     clpeak \
     memtester \
     pcimem \
-    iperf3 \
     dhrystone \
     stressapptest \
     tinymembench \
