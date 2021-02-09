@@ -32,6 +32,16 @@ IMAGE_LINGUAS = "en-us"
 
 CONMANPKGS ?= "connman connman-plugin-loopback connman-plugin-ethernet connman-plugin-wifi connman-client"
 
+# Entropy source daemon
+RANDOM_HELPER = "rng-tools"
+RANDOM_HELPER_tegra124 = "haveged"
+
+USB_GADGET = ""
+USB_GADGET_imx = " \
+    libusbgx \
+    libusbgx-examples \
+"
+
 IMAGE_INSTALL += " \
     packagegroup-boot \
     packagegroup-basic \
