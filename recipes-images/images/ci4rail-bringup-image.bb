@@ -53,7 +53,6 @@ IMAGE_INSTALL += " \
     packagegroup-wifi-tdx-cli \
     packagegroup-wifi-fw-tdx-cli \
     udev-extraconf \
-    ${CONMANPKGS} \
     ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'timestamp-service systemd-analyze', '', d)} \
     bzip2 \
     e2fsprogs \
@@ -88,4 +87,6 @@ IMAGE_INSTALL += " \
     pciutils \
     minicom \
     nano \
+    networkmanager \
+    modemmanager \
 "
