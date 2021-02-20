@@ -1,5 +1,5 @@
 inherit systemd
-
+inherit features_check
 require overlay-directories.inc
 
 SUMMARY = "Creates and mounts overlay directories for several modules used by meta-ci.os"
