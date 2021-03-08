@@ -1,12 +1,12 @@
 inherit core-image
 
-SUMMARY = "Ci4Rail Embedded Linux Image for HW bringup"
-DESCRIPTION = "Ci4Rail Embedded Linux Image for HW bringup. Copied from tdx-minimal-reference-image"
+SUMMARY = "Ci4Rail Embedded Linux Image for Ci4Rail Edgefarm"
+DESCRIPTION = "Ci4Rail Embedded Linux Image for Ci4Rail Edgefarm. Based on tdx-minimal-reference-image"
 
 LICENSE = "MIT"
 
 #Prefix to the resulting deployable tarball name
-export IMAGE_BASENAME = "Bringup-Image"
+export IMAGE_BASENAME = "Edgefarm-Image"
 MACHINE_NAME ?= "${MACHINE}"
 GIT_VERSION := "${@d.getVar('BB_ORIGENV',False).getVar('IMAGE_GIT_VERSION', False) or 'NoVersion'}"
 NAME_SUFFIX := "${@d.getVar('BB_ORIGENV',False).getVar('IMAGE_NAME_SUFFIX', False) or ''}"
@@ -63,28 +63,11 @@ IMAGE_INSTALL += " \
     minicom \
     mmc-utils-cos \
     pciutils \
-    phytool \
     procps \
     ${RANDOM_HELPER} \
-    stress-ng \
     sqlite3 \
-    tdx-oak-sensors \
     ${USB_GADGET} \
     util-linux \
-    cpuburn-a53 \
-    clpeak \
-    memtester \
-    pcimem \
-    dhrystone \
-    stressapptest \
-    tinymembench \
-    whetstone \
-    fio \
-    lshw \
-    hwdata \
-    pciutils \
-    minicom \
-    nano \
     networkmanager \
     modemmanager \
 "
