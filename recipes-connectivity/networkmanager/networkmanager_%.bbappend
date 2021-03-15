@@ -6,7 +6,7 @@ SRC_URI += "file://eth2.connection"
 PACKAGECONFIG_remove = "ifupdown dnsmasq"
 
 # configure networkmanager with modemmanager support
-PACKAGECONFIG_append = " modemmanager ppp"
+PACKAGECONFIG_append += "modemmanager ppp"
 RPROVIDES_${PN} = "network-configuration"
 
 do_install_append() {
