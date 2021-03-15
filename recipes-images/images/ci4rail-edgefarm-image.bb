@@ -25,10 +25,9 @@ add_rootfs_version () {
     printf "${IMAGE_NAME}\n\n" >> ${IMAGE_ROOTFS}/etc/issue.net
 }
 # add the rootfs version to the welcome banner
-ROOTFS_POSTPROCESS_COMMAND += " add_rootfs_version;"
+ROOTFS_POSTPROCESS_COMMAND += "add_rootfs_version;"
 
 IMAGE_LINGUAS = "en-us"
-#IMAGE_LINGUAS = "de-de fr-fr en-gb en-us pt-br es-es kn-in ml-in ta-in"
 
 # Entropy source daemon
 RANDOM_HELPER = "rng-tools"
