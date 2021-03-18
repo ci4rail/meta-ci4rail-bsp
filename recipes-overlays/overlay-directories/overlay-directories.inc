@@ -12,3 +12,8 @@ IOTEDGE_OVERLAY_RUN_ROOT_DIR ?= "/data"
 IOTEDGE_OVERLAY_RUN_LOWER_DIR ?= "/var/lib/iotedge"
 IOTEDGE_OVERLAY_RUN_UPPER_DIR ?= "/data/iotedge/var/lib/iotedge"
 IOTEDGE_OVERLAY_RUN_WORK_DIR ?= "/data/.overlay/iotedge-work/var/lib/iotedge"
+
+NETWORKMANAGER_OVERLAY_CONFIG_ROOT_DIR ?= "/data"
+NETWORKMANAGER_OVERLAY_CONFIG_LOWER_DIR ?= "/etc/NetworkManager"
+NETWORKMANAGER_OVERLAY_CONFIG_UPPER_DIR ?= "/data/NetworkManager/etc/NetworkManager"
+NETWORKMANAGER_OVERLAY_CONFIG_WORK_DIR ?= "/data/.overlay/NetworkManager-work/etc/NetworkManager"
