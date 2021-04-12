@@ -1,0 +1,2 @@
+# Disable password authentication, use ssh key instead
+DROPBEAR_EXTRA_ARGS="-s -g"
