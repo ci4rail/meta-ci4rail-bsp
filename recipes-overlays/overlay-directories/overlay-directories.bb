@@ -22,33 +22,25 @@ do_install() {
     
     cat <<EOF > ${D}${CREATE_OVERLAY_DIRECTORIES_SCRIPT}
 #!/bin/sh
-# create docker overlay directories
-mkdir -p ${DOCKER_OVERLAY_CONFIG_ROOT_DIR}
-mkdir -p ${DOCKER_OVERLAY_CONFIG_UPPER_DIR}
-mkdir -p ${DOCKER_OVERLAY_CONFIG_WORK_DIR}
-# create iotedge overlay directories
-# iotedge config
-mkdir -p ${IOTEDGE_OVERLAY_CONFIG_ROOT_DIR}
-mkdir -p ${IOTEDGE_OVERLAY_CONFIG_UPPER_DIR}
-mkdir -p ${IOTEDGE_OVERLAY_CONFIG_WORK_DIR}
 # iotedge run
 mkdir -p ${IOTEDGE_OVERLAY_RUN_ROOT_DIR}
 mkdir -p ${IOTEDGE_OVERLAY_RUN_UPPER_DIR}
 mkdir -p ${IOTEDGE_OVERLAY_RUN_WORK_DIR}
-# NetworkManager config
-mkdir -p ${NETWORKMANAGER_OVERLAY_CONFIG_ROOT_DIR}
-mkdir -p ${NETWORKMANAGER_OVERLAY_CONFIG_UPPER_DIR}
-mkdir -p ${NETWORKMANAGER_OVERLAY_CONFIG_WORK_DIR}
+# etc
+mkdir -p ${ETC_OVERLAY_CONFIG_ROOT_DIR}
+mkdir -p ${ETC_OVERLAY_CONFIG_UPPER_DIR}
+mkdir -p ${ETC_OVERLAY_CONFIG_WORK_DIR}
 
 # mount overlays
-mount -t overlay overlay -o lowerdir=${DOCKER_OVERLAY_CONFIG_LOWER_DIR},upperdir=${DOCKER_OVERLAY_CONFIG_UPPER_DIR},workdir=${DOCKER_OVERLAY_CONFIG_WORK_DIR} ${DOCKER_OVERLAY_CONFIG_LOWER_DIR}
-mount -t overlay overlay -o lowerdir=${IOTEDGE_OVERLAY_CONFIG_LOWER_DIR},upperdir=${IOTEDGE_OVERLAY_CONFIG_UPPER_DIR},workdir=${IOTEDGE_OVERLAY_CONFIG_WORK_DIR} ${IOTEDGE_OVERLAY_CONFIG_LOWER_DIR}
 mount -t overlay overlay -o lowerdir=${IOTEDGE_OVERLAY_RUN_LOWER_DIR},upperdir=${IOTEDGE_OVERLAY_RUN_UPPER_DIR},workdir=${IOTEDGE_OVERLAY_RUN_WORK_DIR} ${IOTEDGE_OVERLAY_RUN_LOWER_DIR}
-mount -t overlay overlay -o lowerdir=${NETWORKMANAGER_OVERLAY_CONFIG_LOWER_DIR},upperdir=${NETWORKMANAGER_OVERLAY_CONFIG_UPPER_DIR},workdir=${NETWORKMANAGER_OVERLAY_CONFIG_WORK_DIR} ${NETWORKMANAGER_OVERLAY_CONFIG_LOWER_DIR}
+mount -t overlay overlay -o lowerdir=${ETC_OVERLAY_CONFIG_LOWER_DIR},upperdir=${ETC_OVERLAY_CONFIG_UPPER_DIR},workdir=${ETC_OVERLAY_CONFIG_WORK_DIR} ${ETC_OVERLAY_CONFIG_LOWER_DIR}
 
 # make lower dir of iotedge writeable. This needs to be done in order that iotedge can start properly.
 # meta-iotedge creates a user and group `iotedge:iotedge`. The service is run as this user.
 chown -R iotedge:iotedge ${IOTEDGE_OVERLAY_RUN_LOWER_DIR}
+
+# copy machine-id from /run (which is bind mounted to /etc/machine-id)
+cp /run/machine-id /etc/machine-id
 EOF
     chmod +x ${D}${CREATE_OVERLAY_DIRECTORIES_SCRIPT}
     install -m 0644 ${WORKDIR}/overlay-directories.service ${D}${systemd_system_unitdir}
