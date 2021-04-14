@@ -1,0 +1,14 @@
+[Unit]
+Description=Moducop CPU01 Layout0 remove GPS reset service
+
+[Service]
+Before=gpsd.service
+Type=oneshot
+RemainAfterExit=no
+User=root
+Group=root
+ExecStart=/usr/bin/gpioset 4 5=1
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
