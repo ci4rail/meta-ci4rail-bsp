@@ -1,0 +1,15 @@
+[Unit]
+Description=GPS (Global Positioning System) Daemon Sockets
+
+[Socket]
+# Allow access to gpsd port only from localhost and docker network
+ExecStartPre=iptables -A INPUT -p tcp -s 127.0.0.0/24 --dport 2947 -j ACCEPT
+ExecStartPre=iptables -A INPUT -p tcp -s 172.17.0.0/16 --dport 2947 -j ACCEPT
+ExecStartPre=iptables -A INPUT -p tcp -s 0.0.0.0/0 --dport 2947 -j DROP 
+ListenStream=/var/run/gpsd.sock
+ListenStream=[::1]:2947
+ListenStream=0.0.0.0:2947
+SocketMode=0600
+
+[Install]
+WantedBy=sockets.target
