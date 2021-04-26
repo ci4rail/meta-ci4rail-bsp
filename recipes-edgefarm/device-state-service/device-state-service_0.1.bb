@@ -1,15 +1,16 @@
 inherit systemd
 inherit go
+inherit features_check
 
-DESCRIPTION = "KYT Device Status Service"
+DESCRIPTION = "Edgefarm Device Status Service"
 
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
 
 DEPENDS += "go-dep-native"
 GO_LINKSHARED = ""
-GO_IMPORT = "github.com/ci4rail/kyt/device-state-service"
-SRC_URI = "git://github.com/ci4rail/kyt/;protocol=https;branch=main;subpath=device-state-service"
+GO_IMPORT = "github.com/ci4rail/device-state-service"
+SRC_URI = "git://github.com/ci4rail/device-state-service;protocol=https;branch=main"
 SRC_URI += "file://device-state-service.service"
 
 SRCREV = "${AUTOREV}"
@@ -20,7 +21,7 @@ REQUIRED_DISTRO_FEATURES= "systemd"
 
 do_compile() {
     mkdir -p ${WORKDIR}/build/bin
-    cd ${WORKDIR}/build/src/${GO_IMPORT} && BIN_DIR=${WORKDIR}/build/bin make
+    cd ${WORKDIR}/build/src/${GO_IMPORT}/src && BIN_DIR=${WORKDIR}/build/bin make
     # this is a hack that `do_rm_work` and `do_clean` can do their work
     chmod -R 777 ${WORKDIR}/build/pkg
 }
