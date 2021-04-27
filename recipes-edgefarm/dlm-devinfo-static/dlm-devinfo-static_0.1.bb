@@ -13,7 +13,7 @@ GO_IMPORT = "github.com/ci4rail/dlm-devinfo-static"
 SRC_URI = "git://github.com/ci4rail/dlm-devinfo-static;protocol=https;branch=main"
 SRC_URI += "file://dlm-devinfo-static.service"
 
-SRCREV = "${AUTOREV}"
+SRCREV = "a5878c0e98c45257ae10c6e4e666fc2c413d7a0e"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 SYSTEMD_SERVICE_${PN} = "dlm-devinfo-static.service"

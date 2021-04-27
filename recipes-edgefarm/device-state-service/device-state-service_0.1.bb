@@ -13,7 +13,7 @@ GO_IMPORT = "github.com/ci4rail/device-state-service"
 SRC_URI = "git://github.com/ci4rail/device-state-service;protocol=https;branch=main"
 SRC_URI += "file://device-state-service.service"
 
-SRCREV = "${AUTOREV}"
+SRCREV = "c947ab51f5e5dcc9dac171d5ddd70d502d611d0e"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 SYSTEMD_SERVICE_${PN} = "device-state-service.service"
