@@ -1,11 +1,12 @@
 inherit systemd
 inherit go
 inherit features_check
-
 DESCRIPTION = "Edgefarm Device Status Service"
 
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
+
+FILESEXTRAPATHS_prepend := "${THISDIR}/${MACHINE}:"
 
 DEPENDS += "go-dep-native"
 GO_LINKSHARED = ""
