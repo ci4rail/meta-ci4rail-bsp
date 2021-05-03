@@ -1,15 +1,14 @@
 [Unit]
-Description=KYT Device Info Static Service
+Description=Edgefarm Static Device Info Service
 After=network-online.target
 Requires=network-online.target
 
 [Service]
-Type=oneshot
-RemainAfterExit=no
+Type=simple
 User=root
 Group=root
-ExecStart=/usr/bin/kyt-dlm-devinfo-static
-Restart=no
+ExecStart=/usr/bin/dlm-devinfo-static
+Restart=on-abort
 
 [Install]
 WantedBy=multi-user.target
