@@ -1,0 +1,21 @@
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 7963e27b754c..ecbdebbdca06 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -226,6 +226,7 @@ struct imx6_pcie {
+ #define PCIE_PHY_CMN_REG62_PLL_CLK_OUT		0x08
+ #define PCIE_PHY_CMN_REG64			0x190
+ #define PCIE_PHY_CMN_REG64_AUX_RX_TX_TERM	0x8C
++#define PCIE_PHY_CMN_REG65               0x194
+ #define PCIE_PHY_CMN_REG75			0x1D4
+ #define PCIE_PHY_CMN_REG75_PLL_DONE		0x3
+ #define PCIE_PHY_TRSV_REG5			0x414
+@@ -1625,6 +1626,8 @@ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ 			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG62);
+ 			writel(PCIE_PHY_CMN_REG64_AUX_RX_TX_TERM,
+ 			       imx6_pcie->phy_base + PCIE_PHY_CMN_REG64);
++                       /* ref clk config */
++                       writel(0x9F, imx6_pcie->phy_base + PCIE_PHY_CMN_REG65);
+ 			/* Do the PHY common block reset */
+ 			regmap_update_bits(imx6_pcie->iomuxc_gpr, offset,
+ 					   IMX8MM_GPR_PCIE_CMN_RST,
