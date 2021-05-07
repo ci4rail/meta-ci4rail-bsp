@@ -70,4 +70,5 @@ IMAGE_INSTALL += " \
     util-linux \
     networkmanager \
     modemmanager \
+    ignition-watcher \
 "
