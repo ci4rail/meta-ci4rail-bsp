@@ -1,6 +1,7 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${BPN}:"
 
 # Set fixed IP for eth2
+<<<<<<< HEAD
 SRC_URI += "file://eth2.connection \
             file://ethernet-usb_io_ctrl.nmconnection \
             file://ethernet-usb_ext1.nmconnection \
@@ -11,6 +12,9 @@ SRC_URI += "file://eth2.connection \
             file://ethernet-usb_ext6.nmconnection \
             file://ethernet-usb_ext7.nmconnection \
             file://ethernet-usb_ext8.nmconnection"
+=======
+SRC_URI += "file://eth2.connection file://ethernet-usb0.connection file://ethernet-usb1.connection"
+>>>>>>> add netio usb1
 
 PACKAGECONFIG_remove = "ifupdown dnsmasq"
 
@@ -19,6 +23,7 @@ PACKAGECONFIG_append += "modemmanager ppp"
 RPROVIDES_${PN} = "network-configuration"
 
 do_install_append() {
+<<<<<<< HEAD
     install -m 0600 ${WORKDIR}/eth2.connection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -m 0600 ${WORKDIR}/ethernet-usb_io_ctrl.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -m 0600 ${WORKDIR}/ethernet-usb_ext1.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
@@ -29,4 +34,7 @@ do_install_append() {
     install -m 0600 ${WORKDIR}/ethernet-usb_ext6.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -m 0600 ${WORKDIR}/ethernet-usb_ext7.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -m 0600 ${WORKDIR}/ethernet-usb_ext8.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
+=======
+    install -m 0600 ${WORKDIR}/eth2.connection ${WORKDIR}/ethernet-usb0.connection ${WORKDIR}/ethernet-usb1.connection ${D}${sysconfdir}/NetworkManager/system-connections/
+>>>>>>> add netio usb1
 }
