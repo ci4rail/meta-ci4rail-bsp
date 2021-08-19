@@ -1,0 +1,7 @@
+# Defaults for dhcp initscript
+# sourced by /etc/init.d/dhcp-server
+# installed at /etc/default/dhcp-server by the maintainer scripts
+
+# On what interfaces should the DHCP server (dhcpd) serve DHCP requests?
+#       Separate multiple interfaces with spaces, e.g. "eth0 eth1".
+INTERFACES="usb_ext1 usb_ext2 usb_ext3 usb_ext4 usb_ext5 usb_ext6 usb_ext7 usb_ext8 usb_io_ctrl"
