@@ -1,0 +1,1 @@
+ACTION=="add", ATTRS{interface}=="TinyUSB Network", PROGRAM="/usr/bin/esp_interface_name.sh %k", NAME="%c"

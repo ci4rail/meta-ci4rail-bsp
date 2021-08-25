@@ -70,6 +70,8 @@ IMAGE_INSTALL += " \
     util-linux \
     networkmanager \
     modemmanager \
+    netio-dfu \
+    dhcp-server \
     chrony \
     chronyc \
 "
