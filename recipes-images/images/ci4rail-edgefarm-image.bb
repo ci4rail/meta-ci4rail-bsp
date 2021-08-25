@@ -72,4 +72,6 @@ IMAGE_INSTALL += " \
     modemmanager \
     netio-dfu \
     dhcp-server \
+    chrony \
+    chronyc \
 "
