@@ -57,7 +57,6 @@ IMAGE_INSTALL += " \
     e2fsprogs-tune2fs \
     ethtool \
     gpsd \
-    gps-cpu01-lay0-reset \
     grep \
     lsof \
     minicom \
