@@ -1,0 +1,21 @@
+[Unit]
+Description=GPS (Global Positioning System) Daemon
+Requires=gpsd.socket
+# Needed with chrony SOCK refclock
+After=chronyd.service
+
+[Service]
+Type=forking
+EnvironmentFile=-/etc/default/gpsd
+EnvironmentFile=-/etc/sysconfig/gpsd
+ExecStart=/usr/sbin/gpsd $GPSD_OPTIONS $OPTIONS $DEVICES
+
+# klaus.popp@ci4rail.com: Without this sleep, gpsd does not work correctly when started with -n option.
+# The behaviour is: clients can connect, but do not receive any data. No idea why this is necessary
+# Also, when the delay is shorter than ~10s seconds, then gpsd cannot open the identified USB device
+# at boot (Device or resource busy)
+ExecStartPre=/bin/sleep 20
+
+[Install]
+WantedBy=multi-user.target
+Also=gpsd.socket
