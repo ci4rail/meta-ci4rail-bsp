@@ -1,1 +1,0 @@
-ACTION=="add", ATTRS{interface}=="TinyUSB Network", NAME="$env{ID_NET_NAME_PATH}"

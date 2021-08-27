@@ -3,7 +3,7 @@ START_DAEMON="false"
 # -n = don't wait for clients. Poll GPS device from the start. Required to provide time to chrony
 # -G = Allow non-local connections (restricted by iptable settings in gpsd.socket)
 #
-GPSD_OPTIONS="-G -n -D3"
+GPSD_OPTIONS="-G -n"
 
 #
 # No devices need to be provided here. 
