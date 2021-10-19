@@ -29,4 +29,5 @@ do_install_append() {
     install -m 0600 ${WORKDIR}/ethernet-usb_ext6.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -m 0600 ${WORKDIR}/ethernet-usb_ext7.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -m 0600 ${WORKDIR}/ethernet-usb_ext8.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
+    install -m 0755 ${WORKDIR}/10-io4edge.sh ${D}${sysconfdir}/NetworkManager/dispatcher.d/
 }
