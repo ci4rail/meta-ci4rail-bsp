@@ -5,7 +5,8 @@ Requires=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/ttynvt -M 199 -m 6 -n tty_io_ctrl -S 192.168.200.1:10000
+# start with -D2 for debugging
+ExecStart=/usr/bin/ttynvt -f -E -M 199 -m 6 -n tty_io_ctrl -S 192.168.200.1:10000
 
 Restart=on-abort
 
