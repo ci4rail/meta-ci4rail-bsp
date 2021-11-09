@@ -9,9 +9,9 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7ca
 DEPENDS += "go-dep-native"
 GO_LINKSHARED = ""
 GO_IMPORT = "github.com/ci4rail/io4edge-cli"
-SRC_URI = "git://github.com/ci4rail/io4edge-cli;protocol=https;branch=add_mdns_browser"
+SRC_URI = "git://github.com/ci4rail/io4edge-cli;protocol=https;branch=main"
 
-SRCREV = "fb64f6dd92a3b0590cc51df7b3393614100b0f57"
+SRCREV = "0250ed69514a4aef308bbc7b7f1d7565f67c5819"
 
 do_compile() {
     mkdir -p ${WORKDIR}/build/bin
