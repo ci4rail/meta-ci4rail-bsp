@@ -73,4 +73,7 @@ IMAGE_INSTALL += " \
     dhcp-server \
     chrony \
     chronyc \
+    io4edge-cli \
+    ttynvt \
+    python3-pyserial \
 "
