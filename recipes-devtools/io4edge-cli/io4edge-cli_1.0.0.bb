@@ -1,7 +1,10 @@
 inherit go
 inherit features_check
 
-DESCRIPTION = "Command Line Interface for Io4Edge Devices"
+
+SUMMARY = "Command Line Interface for Io4Edge Devices"
+DESCRIPTION = "Command line tool to manage io4edge devices, e.g. identify the currently running firmware, load new firmware, etc."
+HOMEPAGE = "https://github.com/ci4rail/io4edge-cli"
 
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
