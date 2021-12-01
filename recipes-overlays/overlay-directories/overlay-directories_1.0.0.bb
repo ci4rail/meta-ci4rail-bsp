@@ -2,10 +2,13 @@ inherit systemd
 inherit features_check
 require overlay-directories.inc
 
-SUMMARY = "Creates and mounts overlay directories for several modules used by meta-ci.os"
+SUMMARY = "Creates and mounts overlay directories"
+DESCRIPTION = "Creates and mounts overlay directories for several modules used by meta-ci.os.\
+This is requied as the FS is read only."
+HOMEPAGE = "https://ci4rail.com"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI += "file://overlay-directories.service"
+SRC_URI_append = " file://overlay-directories.service"
 SYSTEMD_SERVICE_${PN} = "overlay-directories.service"
 
 LICENSE = "Apache-2.0"
@@ -19,7 +22,7 @@ SYSTEMD_AUTO_ENABLE = "enable"
 do_install() {
     install -d ${D}${bindir}
     install -d ${D}${systemd_system_unitdir}
-    
+
     cat <<EOF > ${D}${CREATE_OVERLAY_DIRECTORIES_SCRIPT}
 #!/bin/sh
 # iotedge run

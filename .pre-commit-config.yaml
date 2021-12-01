@@ -30,4 +30,11 @@ repos:
     rev: 3.7.1
     hooks:
       - id: oelint-adv
-        args: [--nowarn, --noinfo, --quiet]
+        args:
+          [
+            --nowarn,
+            --noinfo,
+            --quiet,
+            --relpaths,
+            --suppress=oelint.task.nocopy,
+          ]

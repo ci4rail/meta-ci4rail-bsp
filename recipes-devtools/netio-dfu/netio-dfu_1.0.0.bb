@@ -1,4 +1,6 @@
-DESCRIPTION = "Device Firmware Update via Network for Ci4Rail NetIO Modules"
+SUMMARY = "Device Firmware Update for Ci4Rail NetIO Modules"
+DESCRIPTION = "Enables to update the connected NetIO Modules via Network."
+HOMEPAGE = "https://ci4rail.com"
 
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"

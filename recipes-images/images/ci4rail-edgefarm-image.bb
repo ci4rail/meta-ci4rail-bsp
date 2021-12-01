@@ -31,49 +31,46 @@ IMAGE_LINGUAS = "en-us"
 
 # Entropy source daemon
 RANDOM_HELPER = "rng-tools"
-RANDOM_HELPER_tegra124 = "haveged"
 
-USB_GADGET = ""
-USB_GADGET_imx = " \
+USB_GADGET = " \
     libusbgx \
     libusbgx-examples \
 "
 
-IMAGE_INSTALL += " \
-    packagegroup-boot \
-    packagegroup-basic \
-    packagegroup-base-tdx-cli \
-    packagegroup-benchmark-tdx-cli \
-    packagegroup-devel-tdx-cli \
-    packagegroup-machine-tdx-cli \
-    packagegroup-networking-tdx-cli \
-    packagegroup-wifi-tdx-cli \
-    packagegroup-wifi-fw-tdx-cli \
-    udev-extraconf \
-    ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'timestamp-service systemd-analyze', '', d)} \
-    bzip2 \
-    e2fsprogs \
-    e2fsprogs-resize2fs \
-    e2fsprogs-tune2fs \
-    ethtool \
-    gpsd \
-    grep \
-    lsof \
-    minicom \
-    mmc-utils-cos \
-    pciutils \
-    procps \
-    ${RANDOM_HELPER} \
-    sqlite3 \
-    ${USB_GADGET} \
-    util-linux \
-    networkmanager \
-    modemmanager \
-    netio-dfu \
-    dhcp-server \
-    chrony \
-    chronyc \
-    io4edge-cli \
-    ttynvt \
-    python3-pyserial \
-"
+IMAGE_INSTALL +=  " packagegroup-boot \
+                    packagegroup-basic \
+                    packagegroup-base-tdx-cli \
+                    packagegroup-benchmark-tdx-cli \
+                    packagegroup-devel-tdx-cli \
+                    packagegroup-machine-tdx-cli \
+                    packagegroup-networking-tdx-cli \
+                    packagegroup-wifi-tdx-cli \
+                    packagegroup-wifi-fw-tdx-cli \
+                    udev-extraconf \
+                    ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'timestamp-service systemd-analyze', '', d)} \
+                    bzip2 \
+                    e2fsprogs \
+                    e2fsprogs-resize2fs \
+                    e2fsprogs-tune2fs \
+                    ethtool \
+                    gpsd \
+                    grep \
+                    lsof \
+                    minicom \
+                    mmc-utils-cos \
+                    pciutils \
+                    procps \
+                    ${RANDOM_HELPER} \
+                    sqlite3 \
+                    ${USB_GADGET} \
+                    util-linux \
+                    networkmanager \
+                    modemmanager \
+                    netio-dfu \
+                    dhcp-server \
+                    chrony \
+                    chronyc \
+                    io4edge-cli \
+                    ttynvt \
+                    python3-pyserial \
+                "

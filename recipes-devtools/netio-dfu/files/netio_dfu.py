@@ -30,11 +30,11 @@ class HTTPS_Server(threading.Thread):
         httpd.serve_forever()
 
 def main(args):
-    
+
     https_thread = HTTPS_Server(args.myip, args.port)
     https_thread.start()
     time.sleep(2)
-    
+
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((args.netioip, 1234))
 
@@ -45,7 +45,7 @@ def main(args):
     print(f"Sending URL={url}")
     s.send(url.encode())
     print("Press CTRL-C to exit")
-    
+
 
 tool_description = """
 Tool to load firmware into NETIO module via network.
