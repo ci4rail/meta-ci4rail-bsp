@@ -3,7 +3,7 @@ inherit features_check
 require overlay-directories.inc
 
 SUMMARY = "Creates and mounts overlay directories"
-DESCRIPTION = "Creates and mounts overlay directories for several modules used by meta-ci.os.\
+DESCRIPTION = "Creates and mounts overlay directories for several modules used by meta-ci4rail-bsp.\
 This is requied as the FS is read only."
 HOMEPAGE = "https://ci4rail.com"
 

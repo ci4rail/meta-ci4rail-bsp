@@ -1,4 +1,4 @@
-# meta-ci.os
+# meta-ci4rail-bsp
 
 CI4Rail Top Level Yocto Layer
 

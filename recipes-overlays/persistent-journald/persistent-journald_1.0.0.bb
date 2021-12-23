@@ -3,7 +3,7 @@ inherit systemd
 require persistent-journald.inc
 
 SUMMARY = "Creates and mounts overlay directories"
-DESCRIPTION = "Creates and mounts overlay directories for several modules used by meta-ci.os.\
+DESCRIPTION = "Creates and mounts overlay directories for several modules used by meta-ci4rail-bsp.\
 This is done because the FS is read only."
 HOMEPAGE = "https://ci4rail.com"
 

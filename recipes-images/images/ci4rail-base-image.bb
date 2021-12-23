@@ -1,6 +1,7 @@
-
 SUMMARY = "Ci4Rail Embedded Linux Basis Image"
-DESCRIPTION = "Ci4Rail Embedded Linux Basis Image. Based on tdx-minimal-reference-image"
+DESCRIPTION = "Minimal image for the Ci4Rail Hardware"
+
+
 LICENSE = "MIT"
 
 inherit core-image
