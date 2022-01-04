@@ -36,6 +36,8 @@ USB_GADGET = " \
     libusbgx-examples \
 "
 
+IMAGE_FSTYPES += "wic"
+
 IMAGE_INSTALL +=  " packagegroup-boot \
                     packagegroup-basic \
                     packagegroup-base-tdx-cli \
