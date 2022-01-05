@@ -376,7 +376,7 @@ IMAGE_CMD_ci4rail_tezi () {
 	${IMAGE_CMD_TAR} \
 		--transform='s/.*\///' \
 		--transform 's,^,${TEZI_IMAGE_NAME}-Tezi_${TEZI_VERSION}/,' \
-		-chf ${IMGDEPLOYDIR}/${TEZI_IMAGE_NAME}-Tezi_${TEZI_VERSION}.tar \
+		-chf ${IMGDEPLOYDIR}/${TEZI_IMAGE_NAME}-ci4rail_tezi.tar \
 		toradexlinux.png marketing.tar prepare.sh wrapup.sh ${EULA_FILE} \
 		${WORKDIR}/image-json/image.json ${TEZI_ARTIFACTS}
 }
