@@ -23,7 +23,6 @@ TEZI_VERSION ?= "${DISTRO_VERSION}"
 TEZI_DATE ?= "${TDX_MATRIX_BUILD_TIME}"
 TEZI_IMAGE_NAME ?= "${IMAGE_NAME}"
 TEZI_ROOT_FSTYPE ??= "ext4"
-TEZI_ROOT_LABEL ??= "RFS"
 TEZI_ROOT_NAME ??= "rootfs"
 TEZI_ROOT_SUFFIX ??= "tar.xz"
 TEZI_USE_BOOTFILES ??= "true"
@@ -153,7 +152,7 @@ def rootfs_tezi_emmc(d, use_bootfiles):
                 "partition_size_nominal": get_bootfs_part_size(d),
                 "want_maximised": False,
                 "content": {
-                  "label": "BOOT",
+                  "label": "boot",
                   "filesystem_type": "FAT",
                   "mkfs_options": "",
                   "filename": imagename + "." + d.getVar('TEZI_BOOT_SUFFIX'),
@@ -166,7 +165,6 @@ def rootfs_tezi_emmc(d, use_bootfiles):
             "partition_size_nominal": 512,
             "want_maximised": False,
             "content": {
-              "label": d.getVar('TEZI_ROOT_LABEL'),
               "filesystem_type": d.getVar('TEZI_ROOT_FSTYPE'),
               "mkfs_options": "-E nodiscard",
               "filename": imagename + "." + d.getVar('TEZI_ROOT_SUFFIX'),
@@ -179,7 +177,7 @@ def rootfs_tezi_emmc(d, use_bootfiles):
             "partition_size_nominal": 512,
             "want_maximised": True,
             "content": {
-              "label": DATA,
+              "label": "data",
               "filesystem_type": d.getVar('TEZI_ROOT_FSTYPE'),
             }
           })
