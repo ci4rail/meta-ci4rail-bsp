@@ -359,11 +359,10 @@ TAR_IMAGE_ROOTFS_task-image-bootfs = "${WORKDIR}/bootfs"
 IMAGE_CMD_bootfs () {
        :
 }
-TEZI_IMAGE_BOOTFS_PREFUNCS ??= "tezi_deploy_bootfs_files"
-do_image_bootfs[prefuncs] += "${TEZI_IMAGE_BOOTFS_PREFUNCS}"
+do_image_bootfs[prefuncs] += "tezi_deploy_bootfs_files"
 
-IMAGE_TYPEDEP_ci4rail-tezi += "${TEZI_BOOT_SUFFIX} ${TEZI_ROOT_SUFFIX}"
-IMAGE_CMD_ci4rail-tezi () {
+IMAGE_TYPEDEP_ci4rail_tezi += "${TEZI_BOOT_SUFFIX} ${TEZI_ROOT_SUFFIX}"
+IMAGE_CMD_ci4rail_tezi () {
 	bbnote "Create Toradex Easy Installer tarball"
 
 	# Copy image json file to ${WORKDIR}/image-json
@@ -381,8 +380,8 @@ IMAGE_CMD_ci4rail-tezi () {
 		toradexlinux.png marketing.tar prepare.sh wrapup.sh ${EULA_FILE} \
 		${WORKDIR}/image-json/image.json ${TEZI_ARTIFACTS}
 }
-do_image_ci4rail-tezi[dirs] += "${WORKDIR}/image-json ${DEPLOY_DIR_IMAGE}"
-do_image_ci4rail-tezi[cleandirs] += "${WORKDIR}/image-json"
-do_image_ci4rail-tezi[prefuncs] += "rootfs_ci4rail_run_json"
-do_image_ci4rail-tezi[recrdeptask] += "do_deploy"
-do_image_ci4rail-tezi[vardepsexclude] = "TEZI_VERSION TEZI_DATE"
+do_image_ci4rail_tezi[dirs] += "${WORKDIR}/image-json ${DEPLOY_DIR_IMAGE}"
+do_image_ci4rail_tezi[cleandirs] += "${WORKDIR}/image-json"
+do_image_ci4rail_tezi[prefuncs] += "rootfs_ci4rail_run_json"
+do_image_ci4rail_tezi[recrdeptask] += "do_deploy"
+do_image_ci4rail_tezi[vardepsexclude] = "TEZI_VERSION TEZI_DATE"
