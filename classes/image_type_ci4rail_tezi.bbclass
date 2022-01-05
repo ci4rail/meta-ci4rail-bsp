@@ -162,13 +162,23 @@ def rootfs_tezi_emmc(d, use_bootfiles):
 
     filesystem_partitions.append(
           {
-            "partition_size_nominal": 512,
-            "want_maximised": True,
+            "partition_size_nominal": 1024,
+            "want_maximised": False,
             "content": {
               "filesystem_type": d.getVar('TEZI_ROOT_FSTYPE'),
               "mkfs_options": "-E nodiscard",
               "filename": imagename + "." + d.getVar('TEZI_ROOT_SUFFIX'),
               "uncompressed_size": get_uncompressed_size(d, d.getVar('TEZI_ROOT_NAME'))
+            }
+          })
+
+    filesystem_partitions.append(
+          {
+            "partition_size_nominal": 512,
+            "want_maximised": True,
+            "content": {
+              "label": "data",
+              "filesystem_type": d.getVar('TEZI_ROOT_FSTYPE'),
             }
           })
 
