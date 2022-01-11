@@ -394,4 +394,4 @@ do_image_ci4rail_tezi[prefuncs] += "rootfs_ci4rail_run_json"
 do_image_ci4rail_tezi[recrdeptask] += "do_deploy"
 do_image_ci4rail_tezi[vardepsexclude] = "TEZI_VERSION TEZI_DATE"
 
-require mender-setup-image.inc
+require ci4rail-update-fstab.inc
