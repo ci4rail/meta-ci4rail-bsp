@@ -4,4 +4,5 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI += "file://eth.cfg \
             file://modem.cfg \
             file://0001-verdin-pcie-clockstrength.patch \
+            file://0002-verdin-pcie-reset.patch \
             "
