@@ -1,29 +1,51 @@
 # meta-ci4rail-bsp
 
-CI4Rail Top Level Yocto Layer
+Yocto BSP layer for the CI4Rail Hardware.
 
-## Ci4Rail recipes
+## Dependencies
 
-***`recipes-overlays/overlay-directories`***
+This layer depends on:
 
-Overlay mounts for `/etc/docker`.
+* URI: git://git.yoctoproject.org/git/meta-yocto
+  * layers: meta-poky
+  * branch: dunfell
 
-## 3rd Party layer modifications
+* URI: git://github.com/openembedded/openembedded-core
+  * layers: meta
+  * branch: dunfell
 
-**`recipes-images/images/tdx-reference-minimal-image.bbappend`**
+* URI: git://git.openembedded.org/meta-openembedded
+  * layers: meta-oe, meta-networking, meta-filesystems, meta-python, meta-xfce, meta-gnome, meta-multimedia, meta-initramfs
+  * branch: dunfell
 
-Modifies variables to enable versioning using environment variables: `IMAGE_GIT_VERSION` for versioning and `IMAGE_NAME_SUFFIX` for tagging a development build.
+* URI: git://github.com/Freescale/meta-freescale-3rdparty
+  * branch: dunfell
 
-**`recipes-core/base-files/base_files_3.0.14.bbappend`**
+* URI: git://github.com/Freescale/meta-freescale-distro
+  * branch: dunfell
 
-Fix `fstab` file to work with read-only filesystem.
+* URI: git://github.com/Freescale/meta-freescale
+  * branch: dunfell
 
-For read-only filesystem `meta-toradex-demo` provides an own fstab that is not compatible with `openembedded-core`'s way to enable read-only.
+* URI: git://git.toradex.com/meta-toradex-bsp-common
+  * branch: dunfell-5.x.y
 
-Enabling read-only is done with sed by patching the [fstab file](https://github.com/openembedded/openembedded-core/blob/master/meta/classes/rootfs-postcommands.bbclass#L95-L98).
+* URI: git://git.toradex.com/meta-toradex-nxp
+  * branch: dunfell-5.x.y
 
-This won't work with the fstab provided by `meta-toradex-demo`.
+* URI: git://github.com/meta-qt5/meta-qt5
+  * branch: dunfell
 
-**`recipes-containers/docker`**
+* URI: git://git.toradex.com/meta-toradex-demos
+  * branch: dunfell-5.x.y
 
-Add a `/etc/docker/daemon.json` with a modified root-dir and a specific dns server.
+* URI: git://git.toradex.com/meta-toradex-distro
+  * branch: dunfell-5.x.y
+
+## Build
+
+See [build instructions](https://github.com/ci4rail/yocto-images/tree/cleanup#building) from Ci4Rail repository for build definitons and scripts for yocto builds.
+
+## Maintainers
+
+* Ci4Rail GmbH `engineering@ci4rail.com`

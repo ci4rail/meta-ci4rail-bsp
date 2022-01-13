@@ -1,3 +1,4 @@
+# Add a `/etc/docker/daemon.json` with a modified root-dir and a specific dns server.
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 SRC_URI_append = " file://daemon.json"
 

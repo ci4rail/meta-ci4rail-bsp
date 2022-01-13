@@ -1,6 +1,6 @@
 repos:
   # general stuff
-  - repo: git://github.com/pre-commit/pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks.git
     rev: v4.0.1
     hooks:
       # Git style
@@ -13,8 +13,10 @@ repos:
 
       # Common errors
       - id: end-of-file-fixer
+        exclude: .*\.patch
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
+        exclude: .*\.patch
       - id: check-yaml
       - id: check-merge-conflict
       - id: check-executables-have-shebangs

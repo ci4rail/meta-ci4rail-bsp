@@ -1,9 +1,15 @@
+# This class implements a Toradex Easy Installer image prepared for a read only file system.
+# Therfor a new partition is added, which will be mounted rw for log file storage, overlay directories etc.
+# Based largely on meta-toradex-bsp-common/classes/image_type_tezi.bbclass
+
 # This class implements Toradex Easy Installer image type
 # It allows to use OpenEmbedded to build images which can be consumed
 # by the Toradex Easy Installer.
 #
 # Since it also generates the image.json description file it is rather
 # interwind with the boot flow which is U-Boot target specific.
+
+IMAGE_FSTYPES_append = " ci4rail_tezi"
 
 WKS_FILE_DEPENDS_append = " tezi-metadata virtual/dtb"
 DEPENDS += "${WKS_FILE_DEPENDS}"
@@ -394,4 +400,4 @@ do_image_ci4rail_tezi[prefuncs] += "rootfs_ci4rail_run_json"
 do_image_ci4rail_tezi[recrdeptask] += "do_deploy"
 do_image_ci4rail_tezi[vardepsexclude] = "TEZI_VERSION TEZI_DATE"
 
-require ci4rail-update-fstab.inc
+require ci4rail_update_fstab.inc
