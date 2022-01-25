@@ -25,7 +25,7 @@ SRC_URI[386.sha256sum] = "2e3786f85e34f2df437382a4793758d81b1a5531d8b4c7c7d0bc98
 
 do_install() {
     install -d ${D}${bindir}
-    install -m 0755 ${S}/io4edge-cli ${D}${bindir}/io4edge-cli
+    install -m 0755 ${WORKDIR}/io4edge-cli ${D}${bindir}/io4edge-cli
 }
 
 FILES_${PN} += "${bindir}/io4edge-cli"
