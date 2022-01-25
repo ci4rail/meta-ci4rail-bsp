@@ -1,7 +1,7 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 SRC_URI += "file://etc_default_gpsd \
             file://gpsd.service \
-            file://gpsd.socket" 
+            file://gpsd.socket"
 
 #SYSTEMD_SERVICE_${PN} = "${BPN}.service ${BPN}.socket ${BPN}ctl@.service"
 #SYSTEMD_SERVICE_${PN} = "${BPN}.service ${BPN}ctl@.service"

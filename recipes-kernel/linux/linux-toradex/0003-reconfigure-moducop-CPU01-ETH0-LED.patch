@@ -1,0 +1,29 @@
+From 186e7080904cfb6911c52c92995dcc04618480e0 Mon Sep 17 00:00:00 2001
+From: Kas User <kas@example.com>
+Date: Wed, 12 Jan 2022 12:28:18 +0000
+Subject: [PATCH] reconfigure moducop CPU01 ETH0 LED: patch micrel phy driver
+ so that LED2 is used as combined LINK/ACT
+
+---
+ drivers/net/phy/micrel.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/phy/micrel.c b/drivers/net/phy/micrel.c
+index 2ba914d9d68d9..4113f3ab35d67 100644
+--- a/drivers/net/phy/micrel.c
++++ b/drivers/net/phy/micrel.c
+@@ -285,6 +285,11 @@ static int kszphy_config_reset(struct phy_device *phydev)
+ 	if (priv->led_mode >= 0)
+ 		kszphy_setup_led(phydev, priv->type->led_mode_reg, priv->led_mode);
+ 
++	// moducop_cpu01: Use only LED2 as a combined link/act LED
++	phy_write(phydev, 0x16, 0x0E);  /* LED1 off, LED2=combined Link/Act */
++	phy_write(phydev, 0x17, 0x8000); /* enable enhanced LED mode with Bit 15 (undocumented bit!) */
++	phy_write(phydev, 0x1a, 0x00); /* enabled enhanced LED mode */
++
+ 	return 0;
+ }
+ 
+-- 
+2.20.1
+

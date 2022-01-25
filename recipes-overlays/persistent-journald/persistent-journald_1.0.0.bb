@@ -2,11 +2,14 @@ inherit systemd
 
 require persistent-journald.inc
 
-SUMMARY = "Creates and mounts overlay directories for several modules used by meta-ci.os"
+SUMMARY = "Creates and mounts overlay directories"
+DESCRIPTION = "Creates and mounts overlay directories for several modules used by meta-ci4rail-bsp.\
+This is done because the FS is read only."
+HOMEPAGE = "https://ci4rail.com"
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
-SRC_URI += "file://persistent-journald.service"
-SRC_URI += "file://journald.conf"
+SRC_URI_append = " file://persistent-journald.service"
+SRC_URI_append = " file://journald.conf"
 
 SYSTEMD_SERVICE_${PN} = "persistent-journald.service"
 
@@ -39,7 +42,7 @@ EOF
     install -m 0644 ${WORKDIR}/journald.conf ${D}${sysconfdir}/systemd
     chmod +x ${D}${JOURNALD_FLUSH_PERSISTENT_SCRIPT}
     install -m 0644 ${WORKDIR}/persistent-journald.service ${D}${systemd_system_unitdir}
-    
+
 }
 
 FILES_${PN} += "${sysconfdir}/systemd/journald.conf"

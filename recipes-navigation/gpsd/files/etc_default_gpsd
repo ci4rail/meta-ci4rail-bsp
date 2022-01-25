@@ -6,7 +6,7 @@ START_DAEMON="false"
 GPSD_OPTIONS="-G -n"
 
 #
-# No devices need to be provided here. 
+# No devices need to be provided here.
 # Due to USBAUTO="true", gpsd will be triggered by udev when USB GPS devices are attached
 #
 DEVICES=""
