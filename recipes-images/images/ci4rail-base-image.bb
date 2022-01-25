@@ -1,4 +1,4 @@
-SUMMARY ?= "Ci4Rail Embedded Linux Basis Image"
+SUMMARY ?= "Ci4Rail Embedded Linux Base Image"
 DESCRIPTION ?= "Minimal image for the Ci4Rail Hardware"
 
 LICENSE ?= "MIT"

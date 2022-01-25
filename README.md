@@ -44,7 +44,7 @@ This layer depends on:
 
 ## Build
 
-See [build instructions](https://github.com/ci4rail/yocto-images/tree/cleanup#building) from Ci4Rail repository for build definitons and scripts for yocto builds.
+See [build instructions](https://github.com/ci4rail/yocto-images#building) from Ci4Rail repository for build definitons and scripts for yocto builds.
 
 ## Maintainers
 
