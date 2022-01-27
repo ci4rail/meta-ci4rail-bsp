@@ -1,15 +1,15 @@
-From 1ccb13e13f18b9f9ec2f3cbabad9a1404ee528cc Mon Sep 17 00:00:00 2001
+From c1cb973c9a6043a588c3c09e3fe4d463df1d9f88 Mon Sep 17 00:00:00 2001
 From: Kas User <kas@example.com>
-Date: Thu, 20 Jan 2022 13:25:30 +0000
+Date: Thu, 20 Jan 2022 14:31:59 +0000
 Subject: [PATCH 4/4] lan7431 fixed phy support
 
 ---
- drivers/net/ethernet/microchip/lan743x_main.c | 57 +++++++++++++++----
+ drivers/net/ethernet/microchip/lan743x_main.c | 54 +++++++++++++++----
  drivers/net/ethernet/microchip/lan743x_main.h |  5 ++
- 2 files changed, 52 insertions(+), 10 deletions(-)
+ 2 files changed, 49 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/net/ethernet/microchip/lan743x_main.c b/drivers/net/ethernet/microchip/lan743x_main.c
-index 4bbdc53eaf3f3..2a47936d2d5f6 100644
+index 4bbdc53eaf3f3..4f54bea6158eb 100644
 --- a/drivers/net/ethernet/microchip/lan743x_main.c
 +++ b/drivers/net/ethernet/microchip/lan743x_main.c
 @@ -4,6 +4,7 @@
@@ -29,14 +29,11 @@ index 4bbdc53eaf3f3..2a47936d2d5f6 100644
  #include "lan743x_main.h"
  #include "lan743x_ethtool.h"
  
-@@ -970,26 +973,59 @@ static void lan743x_phy_close(struct lan743x_adapter *adapter)
+@@ -970,26 +973,56 @@ static void lan743x_phy_close(struct lan743x_adapter *adapter)
  
  	phy_stop(netdev->phydev);
  	phy_disconnect(netdev->phydev);
 +
-+	if( adapter->phy.is_fixed_phy){
-+		fixed_phy_unregister(netdev->phydev);
-+	}
  	netdev->phydev = NULL;
  }
  
@@ -99,7 +96,7 @@ index 4bbdc53eaf3f3..2a47936d2d5f6 100644
  
  	/* MAC doesn't support 1000T Half */
  	phy_remove_link_mode(phydev, ETHTOOL_LINK_MODE_1000baseT_Half_BIT);
-@@ -1007,6 +1043,7 @@ static int lan743x_phy_open(struct lan743x_adapter *adapter)
+@@ -1007,6 +1040,7 @@ static int lan743x_phy_open(struct lan743x_adapter *adapter)
  	return ret;
  }
  
