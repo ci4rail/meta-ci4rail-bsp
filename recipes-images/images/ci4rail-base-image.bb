@@ -6,7 +6,7 @@ LICENSE ?= "MIT"
 inherit core-image
 
 #Prefix to the resulting deployable tarball name
-export IMAGE_BASENAME = "Base-Image"
+IMAGE_BASENAME ?= "Base-Image"
 MACHINE_NAME ?= "${MACHINE}"
 GIT_VERSION := "${@d.getVar('BB_ORIGENV',False).getVar('IMAGE_GIT_VERSION', False) or 'NoVersion'}"
 NAME_SUFFIX := "${@d.getVar('BB_ORIGENV',False).getVar('IMAGE_NAME_SUFFIX', False) or ''}"
