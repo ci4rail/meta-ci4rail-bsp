@@ -30,8 +30,12 @@ mkdir -p ${ETC_OVERLAY_CONFIG_ROOT_DIR}
 mkdir -p ${ETC_OVERLAY_CONFIG_UPPER_DIR}
 mkdir -p ${ETC_OVERLAY_CONFIG_WORK_DIR}
 
+mkdir -p ${ROOT_OVERLAY_CONFIG_UPPER_DIR}
+mkdir -p ${ROOT_OVERLAY_CONFIG_WORK_DIR}
+
 # mount overlays
 mount -t overlay overlay -o lowerdir=${ETC_OVERLAY_CONFIG_LOWER_DIR},upperdir=${ETC_OVERLAY_CONFIG_UPPER_DIR},workdir=${ETC_OVERLAY_CONFIG_WORK_DIR} ${ETC_OVERLAY_CONFIG_LOWER_DIR}
+mount -t overlay overlay -o lowerdir=${ROOT_OVERLAY_CONFIG_LOWER_DIR},upperdir=${ROOT_OVERLAY_CONFIG_UPPER_DIR},workdir=${ROOT_OVERLAY_CONFIG_WORK_DIR} ${ROOT_OVERLAY_CONFIG_LOWER_DIR}
 
 # copy machine-id from /run (which is bind mounted to /etc/machine-id)
 cp /run/machine-id /etc/machine-id
