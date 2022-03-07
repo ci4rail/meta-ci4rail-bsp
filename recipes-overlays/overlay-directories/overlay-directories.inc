@@ -2,3 +2,7 @@ ETC_OVERLAY_CONFIG_ROOT_DIR ?= "/data"
 ETC_OVERLAY_CONFIG_LOWER_DIR ?= "/etc"
 ETC_OVERLAY_CONFIG_UPPER_DIR ?= "/data/etc"
 ETC_OVERLAY_CONFIG_WORK_DIR ?= "/data/.overlay/etc"
+
+ROOT_OVERLAY_CONFIG_LOWER_DIR ?= "/home/root"
+ROOT_OVERLAY_CONFIG_UPPER_DIR ?= "/data/root"
+ROOT_OVERLAY_CONFIG_WORK_DIR ?= "/data/.overlay/root"
