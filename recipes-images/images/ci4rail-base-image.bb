@@ -32,8 +32,6 @@ IMAGE_INSTALL += "\
                   packagegroup-boot \
                   packagegroup-basic \
                   packagegroup-base-tdx-cli \
-                  packagegroup-benchmark-tdx-cli \
-                  packagegroup-devel-tdx-cli \
                   packagegroup-machine-tdx-cli \
                   packagegroup-networking-tdx-cli \
                   packagegroup-wifi-tdx-cli \
@@ -53,8 +51,6 @@ IMAGE_INSTALL += "\
                   pciutils \
                   procps \
                   libusbgx \
-                  libusbgx-examples\
-                  sqlite3 \
                   rng-tools \
                   util-linux \
                   networkmanager \
@@ -64,8 +60,9 @@ IMAGE_INSTALL += "\
                   chronyc \
                   io4edge-cli \
                   ttynvt \
-                  python3-pyserial \
                   overlay-directories \
                   persistent-journald \
                   nano \
+                  coreutils \
+                  tar \
                 "
