@@ -64,6 +64,7 @@ IMAGE_INSTALL += "\
                   chronyc \
                   io4edge-cli \
                   ttynvt \
+                  exec-ttynvt \
                   python3-pyserial \
                   overlay-directories \
                   persistent-journald \
