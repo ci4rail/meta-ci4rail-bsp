@@ -65,4 +65,5 @@ IMAGE_INSTALL += "\
                   nano \
                   coreutils \
                   tar \
+                  iperf3 \
                 "
