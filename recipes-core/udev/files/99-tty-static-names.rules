@@ -1,0 +1,3 @@
+# Give tty devices on ports 1-1.2.3.2 and 1-1.2.3.3 static names 
+ACTION=="add|bind|change", SUBSYSTEM=="tty", ATTRS{devpath}=="1.2.3.2", ATTRS{busnum}=="1", SYMLINK+="ttyDev1"
+ACTION=="add|bind|change", SUBSYSTEM=="tty", ATTRS{devpath}=="1.2.3.3", ATTRS{busnum}=="1", SYMLINK+="ttyDev2"
