@@ -5,7 +5,7 @@ Requires=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/exec-ttynvt /usr/bin/ttynvt 199
+ExecStart=/usr/bin/ttynvt-runner /usr/bin/ttynvt -m 199
 
 Restart=on-abort
 

@@ -60,7 +60,7 @@ IMAGE_INSTALL += "\
                   chronyc \
                   io4edge-cli \
                   ttynvt \
-                  exec-ttynvt \
+                  ttynvt-runner \
                   overlay-directories \
                   persistent-journald \
                   nano \
