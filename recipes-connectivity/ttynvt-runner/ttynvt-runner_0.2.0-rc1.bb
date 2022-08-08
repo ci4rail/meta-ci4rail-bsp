@@ -15,14 +15,15 @@ SRC_URI_i686 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV
 SRC_URI_aarch64 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
 SRC_URI_append = " file://${BPN}.service"
 
-#SRC_URI[amd64.md5sum] = "8fb49df93b6cd4691a5b20f0b761b250"
-#SRC_URI[amd64.sha256sum] = "4b75f26aa1f21dc34e8b96d7ab81f278632d33ed9d72b8849d92e79e16e8b1ca"
-#SRC_URI[arm.md5sum] = "d3e440db28f3a0ba8e5bfca4aae27901"
-#SRC_URI[arm.sha256sum] = "6d990206911ae06d232be9f23c9f0d314f95109808e2f0a25166b5c370d4d61f"
-SRC_URI[arm64.md5sum] = "b9dbd4f24352c33bdddb9d1948134f04"
-SRC_URI[arm64.sha256sum] = "978ceb47824264ea2e530946ba8afeabe18e9f10697a3dae9b20521caa3e7fe4"
-#SRC_URI[386.md5sum] = "90299e95bd719ed28dd1145282c3a69c"
-#SRC_URI[386.sha256sum] = "54999f558c575affbd34201fd67797ecb6094c30674308c864bb0caedec48ba0"
+# Use github-release-checksums.sh script in yoct-images repo to update
+SRC_URI[386.md5sum] = "0b9014c30a00f83eaa46af40fd0d06f5"
+SRC_URI[386.sha256sum] = "c9b830d5ace1d1abdf5245f6bf3a8ad1b6ff8fab068ce500d5bd594703a82c3d"
+SRC_URI[amd64.md5sum] = "cc5f5c104d6fbc4cdd850374995c9e53"
+SRC_URI[amd64.sha256sum] = "95a2c51d4a3648b758e528232e3ad43944e8c83c83800883e91fd298fb3d46ef"
+SRC_URI[arm64.md5sum] = "4c453673d33fb427e3c6025839f9fbf2"
+SRC_URI[arm64.sha256sum] = "99ab31b9a44ec47ac81875107b35159f7e89663c24e3e91bc7b3b009b0491487"
+SRC_URI[arm.md5sum] = "d3c40236978c220bd8dc15aece066404"
+SRC_URI[arm.sha256sum] = "5cc551560d38a1565b3e5d43fc88eb687c17731418c274efb70b45165f9ec75d"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 SYSTEMD_SERVICE_${BPN} = "${BPN}.service"

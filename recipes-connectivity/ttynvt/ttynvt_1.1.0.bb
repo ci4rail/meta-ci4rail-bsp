@@ -8,7 +8,7 @@ HOMEPAGE = "https://gitlab.com/ci4rail/ttynvt"
 
 SRC_URI = "git://gitlab.com/ci4rail/ttynvt.git;branch=master;protocol=https"
 
-SRCREV = "7374d8f9131084d1d0f6abfbc877a6a3f85be260"
+SRCREV = "69992ea87f980a8f85d4bbfc9cb2a2b216d8768e"
 PV = "0.0.1+git${SRCPV}"
 
 DEPENDS += "fuse"
