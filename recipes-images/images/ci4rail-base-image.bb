@@ -61,6 +61,8 @@ IMAGE_INSTALL += "\
                   io4edge-cli \
                   ttynvt \
                   ttynvt-runner \
+                  socketcan-io4edge \
+                  socketcan-io4edge-runner \
                   overlay-directories \
                   persistent-journald \
                   nano \

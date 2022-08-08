@@ -1,0 +1,13 @@
+[Unit]
+Description=Gateway socketcan-io4edge CAN
+After=network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/socketcan-io4edge-runner /usr/bin/socketcan-io4edge
+
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
