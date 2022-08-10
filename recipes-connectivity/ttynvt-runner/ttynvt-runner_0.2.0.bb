@@ -16,14 +16,14 @@ SRC_URI_aarch64 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v$
 SRC_URI_append = " file://${BPN}.service"
 
 # Use github-release-checksums.sh script in yoct-images repo to update
-SRC_URI[386.md5sum] = "0b9014c30a00f83eaa46af40fd0d06f5"
-SRC_URI[386.sha256sum] = "c9b830d5ace1d1abdf5245f6bf3a8ad1b6ff8fab068ce500d5bd594703a82c3d"
-SRC_URI[amd64.md5sum] = "cc5f5c104d6fbc4cdd850374995c9e53"
-SRC_URI[amd64.sha256sum] = "95a2c51d4a3648b758e528232e3ad43944e8c83c83800883e91fd298fb3d46ef"
-SRC_URI[arm64.md5sum] = "4c453673d33fb427e3c6025839f9fbf2"
-SRC_URI[arm64.sha256sum] = "99ab31b9a44ec47ac81875107b35159f7e89663c24e3e91bc7b3b009b0491487"
-SRC_URI[arm.md5sum] = "d3c40236978c220bd8dc15aece066404"
-SRC_URI[arm.sha256sum] = "5cc551560d38a1565b3e5d43fc88eb687c17731418c274efb70b45165f9ec75d"
+SRC_URI[386.md5sum] = "5558db692f2136500cfd6f35b4d2c216"
+SRC_URI[386.sha256sum] = "880722caf282d45e28e63ca082fbf3736d658c8cc60b335ba7eff64322ea2897"
+SRC_URI[amd64.md5sum] = "8b7ac6ceeb87e025aad46b7cf4cecc2a"
+SRC_URI[amd64.sha256sum] = "139c3f92f41700bae94d7db92e5015fd37105919b6c7b334e080d88599253fa0"
+SRC_URI[arm64.md5sum] = "6535f106d710d24b1678ced85b88edfd"
+SRC_URI[arm64.sha256sum] = "90b994fcc398630e14f4c6e311c8636b8854d071b5ab31beade3380a84ad4713"
+SRC_URI[arm.md5sum] = "daed01ba5b63884d8faaf9d1ccb1db14"
+SRC_URI[arm.sha256sum] = "f62eede02acca92b96f08ce9ae5b734ecd48f84fe3c9d5efaf81f041a8050aba"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 SYSTEMD_SERVICE_${BPN} = "${BPN}.service"
