@@ -69,4 +69,6 @@ IMAGE_INSTALL += "\
                   coreutils \
                   tar \
                   iperf3 \
+                  wireguard-module \
+                  wireguard-tools \
                 "
