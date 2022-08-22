@@ -1,5 +1,5 @@
 SUMMARY = "Socketcan support for Io4edge CANL2 devices"
-DESCRIPTION = "Adds a systemservice to scan for io4edge CANL2 devices and start a gateway that connects virtual socketcan with io4edge CAN"
+DESCRIPTION = "Gateway between virtual socket CAN and io4edge CAN"
 HOMEPAGE = "https://github.com/ci4rail/socketcan-io4edge"
 
 LICENSE = "Apache-2.0"
@@ -13,29 +13,20 @@ SRC_URI_arm = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v$
 SRC_URI_i586 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
 SRC_URI_i686 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
 SRC_URI_aarch64 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
-SRC_URI_append = " file://${BPN}.service"
 
 # Use github-release-checksums.sh script in yoct-images repo to update
-SRC_URI[386.md5sum] = "484207155c90f39b5438e1ed02a3f988"
-SRC_URI[386.sha256sum] = "1eea0b1a5b19335f9de51a2b4fa8144cb31b9ca4daeafa23779863bf40f22d8a"
-SRC_URI[amd64.md5sum] = "7c1bb3d12a208765c5c14e16c04ffef4"
-SRC_URI[amd64.sha256sum] = "b2af30f98da11127335989fd82021eb8e430652fb3bcf2652257456c9daede19"
-SRC_URI[arm64.md5sum] = "60867d8310cfa33c180a5e7c41bbe645"
-SRC_URI[arm64.sha256sum] = "d3061215865f1888f5cae1e8123baaa420778b9830c9e4b04f2cf94fb91d82c4"
-SRC_URI[arm.md5sum] = "1432fc1e0b638b784b3a552c243f02bc"
-SRC_URI[arm.sha256sum] = "ed40c7cd712c46f62e466227fa669a012abfa57db6147f00fa3911e4d79abd1d"
-
-SYSTEMD_AUTO_ENABLE = "enable"
-SYSTEMD_SERVICE_${BPN} = "${BPN}.service"
-FILES_${PN} += "${systemd_system_unitdir}/${BPN}.service"
+SRC_URI[386.md5sum] = "2a85edcf0dd0e68db700bab6506ff78c"
+SRC_URI[386.sha256sum] = "83479497661f90edeabbccf5a41482e3f5bfef1c854b04d1063762c152a05a71"
+SRC_URI[amd64.md5sum] = "9fa3f36be59103c5e1209400843feaea"
+SRC_URI[amd64.sha256sum] = "cdb629871fc592b69178c6f66ba83b6f87fc302d4cff0dde8b1d05b427f405e2"
+SRC_URI[arm64.md5sum] = "be5053b4297cb3608e7cc0ba768e8ece"
+SRC_URI[arm64.sha256sum] = "c171f7851c1e7561be5e637cac0c4ae91edc8ebf86e5a2944c615d11c494cb37"
+SRC_URI[arm.md5sum] = "b4d6c86aac4121666301db652487f33e"
+SRC_URI[arm.sha256sum] = "176959f7f199ecdf3977bdcaffebc7fadccf5ebd8942f6e47705ec87e0d1b9f4"
 
 do_install() {
     install -d ${D}${bindir}
     install -m 0755 ${WORKDIR}/${BPN} ${D}${bindir}/${BPN}
-    install -d ${D}/${systemd_unitdir}/system
-    install -m 0644 ${WORKDIR}/${BPN}.service ${D}/${systemd_unitdir}/system
 }
 
 FILES_${PN} += "${bindir}/${BPN}"
-
-inherit systemd
