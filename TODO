@@ -1,0 +1,2 @@
+adapt image_type_tezi.class to imx8mp emmc partitions
+adapt classes/ci4rail_update_fstab.inc:CI4RAIL_DATA_PART ?= "/dev/mmcblk0p3"
