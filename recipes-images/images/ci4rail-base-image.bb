@@ -72,3 +72,5 @@ IMAGE_INSTALL += "\
                   wireguard-module \
                   wireguard-tools \
                 "
+
+
