@@ -71,4 +71,5 @@ IMAGE_INSTALL += "\
                   iperf3 \
                   wireguard-module \
                   wireguard-tools \
+                  alsa-utils \
                 "
