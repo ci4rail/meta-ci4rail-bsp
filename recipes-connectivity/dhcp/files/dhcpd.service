@@ -9,7 +9,7 @@ PIDFile=@localstatedir@/run/dhcpd.pid
 EnvironmentFile=@SYSCONFDIR@/default/dhcp-server
 EnvironmentFile=-@SYSCONFDIR@/sysconfig/dhcp-server
 ExecStartPre=@base_bindir@/touch @localstatedir@/lib/dhcp/dhcpd.leases
-ExecStartPre=@base_bindir@/sleep 10
+#ExecStartPre=@base_bindir@/sleep 10
 ExecStart=@SBINDIR@/dhcpd -f -cf @SYSCONFDIR@/dhcp/dhcpd.conf -pf @localstatedir@/run/dhcpd.pid $DHCPDARGS -q $INTERFACES
 
 [Install]
