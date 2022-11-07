@@ -63,8 +63,6 @@ IMAGE_INSTALL += "\
                   ttynvt-runner \
                   socketcan-io4edge \
                   socketcan-io4edge-runner \
-                  overlay-directories \
-                  persistent-journald \
                   nano \
                   coreutils \
                   tar \
@@ -72,5 +70,3 @@ IMAGE_INSTALL += "\
                   wireguard-module \
                   wireguard-tools \
                 "
-
-
