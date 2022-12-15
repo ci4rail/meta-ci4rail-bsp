@@ -55,6 +55,7 @@ IMAGE_INSTALL += "\
                   util-linux \
                   networkmanager \
                   modemmanager \
+                  modem-restart \
                   dhcp-server \
                   chrony \
                   chronyc \
