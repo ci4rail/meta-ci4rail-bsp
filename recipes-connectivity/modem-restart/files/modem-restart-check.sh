@@ -14,15 +14,15 @@ fi
 
 # check if modem is known to ModemManager
 if ! mmcli -L | grep -qi ${VENDOR}  ; then
-    echo "Qualcomm modem not known to ModemManager. Restarting ModemManager."
+    echo "${VENDOR} modem not known to ModemManager. Restarting ModemManager."
     systemctl restart ModemManager
     echo `date`": Restarted ModemManager" >> /data/modem-restart.log
     sleep 30
     if ! mmcli -L | grep -qi ${VENDOR} ; then
-        echo "Qualcomm modem still not known to ModemManager. Exiting."
+        echo "${VENDOR} modem still not known to ModemManager. Exiting."
         exit 1 # let systemd restart modem-restart-check.service
     fi
 else
-    echo "Qualcomm modem already known to ModemManager. Exiting."
+    echo "${VENDOR} modem already known to ModemManager. Exiting."
     exit 0
 fi
