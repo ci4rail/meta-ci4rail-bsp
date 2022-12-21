@@ -4,3 +4,7 @@
 # This won't work with the fstab provided by `meta-toradex-demo`.
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/base-files:"
+
+do_install_append () {
+    install -d ${D}/media/sdcard
+}
