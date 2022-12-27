@@ -6,5 +6,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/base-files:"
 
 do_install_append () {
+    # create mount point for sdcard
     install -d ${D}/media/sdcard
 }
