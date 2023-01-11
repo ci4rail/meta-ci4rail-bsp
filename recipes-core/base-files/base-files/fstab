@@ -8,4 +8,4 @@ tmpfs       /run            tmpfs     mode=0755,nodev,nosuid,strictatime        
 tmpfs       /var/volatile   tmpfs     defaults                                             0  0
 
 # uncomment this if your device has a SD/MMC/Transflash slot
-#/dev/mmcblk0p1       /media/card          auto       defaults,sync,noauto                  0  0
+/dev/mmcblk1p1 /media/sdcard vfat,ext4  auto,nofail,noatime,rw,user                        0  2
