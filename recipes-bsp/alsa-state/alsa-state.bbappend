@@ -1,12 +1,18 @@
-# Invalidate the defaults from meta-toradex-nxp, as we don't use the IMX8 internal sound device
-# Futhermore, the meta-toradex-nxp pkg_postinst_ontarget_* will result in a failure when building the rootfs
-# "The following packages could not be configured offline and rootfs is read-only: ['alsa-state']"
+FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+SRC_URI += "file://asound.state \
+            file://asound.conf \
+            file://state-daemon.conf"
 
-do_install_append_mx8m_tdx () {
-}
+FILES_${PN} += "${sysconfdir}/alsa/state-daemon.conf  \
+                ${sysconfdir}/asound.conf"
 
-pkg_postinst_${PN}_mx8m_tdx () {
-}
+FILES_alsa-states = "${sysconfdir}/alsa/asound.state"
 
-pkg_postinst_ontarget_${PN}_mx8m_tdx () {
+do_install_append () {
+    rm -rf ${D}${localstatedir}
+    install -d ${D}${sysconfdir}
+    install -d ${D}${sysconfdir}/alsa
+    install -m 0644 ${WORKDIR}/asound.state ${D}${sysconfdir}/alsa
+    install -m 0644 ${WORKDIR}/state-daemon.conf ${D}${sysconfdir}/alsa
+    install -m 0644 ${WORKDIR}/asound.conf ${D}${sysconfdir}
 }
