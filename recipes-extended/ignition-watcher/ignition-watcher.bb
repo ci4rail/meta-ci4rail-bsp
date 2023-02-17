@@ -17,7 +17,7 @@ do_install() {
     install -d ${D}${systemd_system_unitdir}
     install -d ${D}${bindir}
     install -m 0644 ${WORKDIR}/ignition-watcher.service ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/watch_ignition_pin.sh ${D}${bindir}
+    install -m 0755 ${WORKDIR}/watch_ignition_pin.sh ${D}${bindir}
 }
 
 FILES_${PN} += "${bindir}/watch_ignition_pin.sh"
