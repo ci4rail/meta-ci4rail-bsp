@@ -12,7 +12,7 @@ interface=$1 status=$2
 
 echo "10-dhcpd-restart running with $interface and $status"
 if [[ "$2" == "up" ]]; then
-  if [[ grep "$1" /etc/default/dhcp-server | grep "INTERFACES" ]]; then
+  if [[ $(grep "$1" /etc/default/dhcp-server | grep "INTERFACES") ]]; then
     echo "Restarting dhcpd"
     systemctl restart dhcpd
   fi
