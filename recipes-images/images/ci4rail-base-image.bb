@@ -70,4 +70,5 @@ IMAGE_INSTALL += "\
                   wireguard-module \
                   wireguard-tools \
                   alsa-utils \
+                  ignition-watcher \
                 "
