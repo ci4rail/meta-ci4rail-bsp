@@ -1,10 +1,10 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += "file://99-esp32-netif-naming.rules \
             file://esp_interface_name.sh \
             file://99-tty-static-names.rules"
 
-do_install_append() {
+do_install:append() {
     install -d ${D}${bindir}
     install -d ${D}${sysconfdir}/udev/rules.d
 
@@ -16,6 +16,6 @@ do_install_append() {
     chmod +x ${D}${bindir}/esp_interface_name.sh
 }
 
-FILES_${PN} += "${sysconfdir}/udev/rules.d/99-esp32-netif-naming.rules"
-FILES_${PN} += "${bindir}/esp_interface_name.sh"
-FILES_${PN} += "${sysconfdir}/udev/rules.d/99-tty-static-names.rules"
+FILES:${PN} += "${sysconfdir}/udev/rules.d/99-esp32-netif-naming.rules"
+FILES:${PN} += "${bindir}/esp_interface_name.sh"
+FILES:${PN} += "${sysconfdir}/udev/rules.d/99-tty-static-names.rules"

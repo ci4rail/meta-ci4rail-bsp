@@ -12,7 +12,7 @@ This layer depends on:
 
 * URI: git://github.com/openembedded/openembedded-core
   * layers: meta
-  * branch: dunfell
+  * branch: kirkstone
 
 * URI: git://git.openembedded.org/meta-openembedded
   * layers: meta-oe, meta-networking, meta-filesystems, meta-python, meta-xfce, meta-gnome, meta-multimedia, meta-initramfs

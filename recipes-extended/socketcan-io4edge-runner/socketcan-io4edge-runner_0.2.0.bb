@@ -8,12 +8,12 @@ LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=86d3f3a95c324c9479bd8986968f43
 COMPATIBLE_HOST = "(i.86|x86_64|aarch64|arm).*-linux"
 
 # Set SRC_URI subdir to ${P} so that files are unpacked into ${S}
-SRC_URI_x86-64 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-amd64.tar.gz;name=amd64"
-SRC_URI_arm = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-arm.tar.gz;name=arm"
+SRC_URI:x86-64 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-amd64.tar.gz;name=amd64"
+SRC_URI:arm = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-arm.tar.gz;name=arm"
 SRC_URI_i586 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
 SRC_URI_i686 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
-SRC_URI_aarch64 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
-SRC_URI_append = " file://${BPN}.service"
+SRC_URI:aarch64 = "https://github.com/ci4rail/socketcan-io4edge/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
+SRC_URI:append = " file://${BPN}.service"
 
 # Use github-release-checksums.sh script in yoct-images repo to update
 SRC_URI[386.md5sum] = "1d55a218f93920f27e70d360b819c72f"
@@ -26,8 +26,8 @@ SRC_URI[arm.md5sum] = "09cf09603a2827028f53e2663deebf97"
 SRC_URI[arm.sha256sum] = "f6af9190ec4540df79a42c9e94a00f3828cc603c2e39aa92922f133350908b8a"
 
 SYSTEMD_AUTO_ENABLE = "enable"
-SYSTEMD_SERVICE_${BPN} = "${BPN}.service"
-FILES_${PN} += "${systemd_system_unitdir}/${BPN}.service"
+SYSTEMD_SERVICE:${BPN} = "${BPN}.service"
+FILES:${PN} += "${systemd_system_unitdir}/${BPN}.service"
 
 do_install() {
     install -d ${D}${bindir}
@@ -36,6 +36,6 @@ do_install() {
     install -m 0644 ${WORKDIR}/${BPN}.service ${D}/${systemd_unitdir}/system
 }
 
-FILES_${PN} += "${bindir}/${BPN}"
+FILES:${PN} += "${bindir}/${BPN}"
 
 inherit systemd

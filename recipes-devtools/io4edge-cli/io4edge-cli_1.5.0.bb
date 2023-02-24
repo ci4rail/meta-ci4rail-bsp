@@ -8,11 +8,11 @@ LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=86d3f3a95c324c9479bd8986968f43
 COMPATIBLE_HOST = "(i.86|x86_64|aarch64|arm).*-linux"
 
 # Set SRC_URI subdir to ${P} so that files are unpacked into ${S}
-SRC_URI_x86-64 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-amd64.tar.gz;name=amd64"
-SRC_URI_arm = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-arm.tar.gz;name=arm"
+SRC_URI:x86-64 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-amd64.tar.gz;name=amd64"
+SRC_URI:arm = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-arm.tar.gz;name=arm"
 SRC_URI_i586 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
 SRC_URI_i686 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
-SRC_URI_aarch64 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
+SRC_URI:aarch64 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
 
 SRC_URI[386.md5sum] = "adc8f11f2b545f34c0082e423f88af21"
 SRC_URI[386.sha256sum] = "694694db4f51e6ed6522d37b492c28e4b41afca778c8f184b2414377f040d297"
@@ -27,4 +27,4 @@ do_install() {
     install -m 0755 ${WORKDIR}/io4edge-cli ${D}${bindir}/io4edge-cli
 }
 
-FILES_${PN} += "${bindir}/io4edge-cli"
+FILES:${PN} += "${bindir}/io4edge-cli"

@@ -12,7 +12,7 @@ SRCREV = "69992ea87f980a8f85d4bbfc9cb2a2b216d8768e"
 PV = "0.0.1+git${SRCPV}"
 
 DEPENDS += "fuse"
-RDEPENDS_${PN} += "fuse"
+RDEPENDS:${PN} += "fuse"
 
 S = "${WORKDIR}/git"
 

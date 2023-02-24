@@ -2,7 +2,7 @@
 CI4RAIL_DATA_PART ?= "/dev/mmcblk0p3"
 
 # Update fstab to include data partition
-ROOTFS_POSTPROCESS_COMMAND_append = " ci4rail_update_fstab_file;"
+ROOTFS_POSTPROCESS_COMMAND:append = " ci4rail_update_fstab_file;"
 ci4rail_update_fstab_file() {
 
     mkdir -p ${IMAGE_ROOTFS}/data

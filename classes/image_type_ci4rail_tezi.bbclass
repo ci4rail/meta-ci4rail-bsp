@@ -9,14 +9,14 @@
 # Since it also generates the image.json description file it is rather
 # interwind with the boot flow which is U-Boot target specific.
 
-IMAGE_FSTYPES_append = " ci4rail_tezi"
+IMAGE_FSTYPES:append = " ci4rail_tezi"
 
-WKS_FILE_DEPENDS_append = " tezi-metadata virtual/dtb"
+WKS_FILE_DEPENDS:append = " tezi-metadata virtual/dtb"
 DEPENDS += "${WKS_FILE_DEPENDS}"
 IMAGE_BOOT_FILES_REMOVE = "${@make_dtb_boot_files(d) if d.getVar('KERNEL_IMAGETYPE') == 'fitImage' else ''}"
 IMAGE_BOOT_FILES_REMOVE_apalis-tk1 = "${@ d.getVar('KERNEL_DEVICETREE') if d.getVar('KERNEL_IMAGETYPE') == 'fitImage' else ''}"
-IMAGE_BOOT_FILES_append = " overlays.txt ${@'' if d.getVar('KERNEL_IMAGETYPE') == 'fitImage' else 'overlays/*;overlays/'}"
-IMAGE_BOOT_FILES_remove = "${IMAGE_BOOT_FILES_REMOVE}"
+IMAGE_BOOT_FILES:append = " overlays.txt ${@'' if d.getVar('KERNEL_IMAGETYPE') == 'fitImage' else 'overlays/*;overlays/'}"
+IMAGE_BOOT_FILES:remove = "${IMAGE_BOOT_FILES_REMOVE}"
 
 RM_WORK_EXCLUDE += "${PN}"
 
@@ -45,7 +45,7 @@ UBOOT_ENV_TEZI_RAWNAND ?= "${UBOOT_ENV_TEZI}"
 
 # use DISTRO_FLAVOUR to append to the image name displayed in TEZI
 DISTRO_FLAVOUR ??= ""
-SUMMARY_append = "${DISTRO_FLAVOUR}"
+SUMMARY:append = "${DISTRO_FLAVOUR}"
 
 TEZI_EULA_URL ?= "https://www.nxp.com/docs/en/disclaimer/LA_OPT_NXP_SW.html"
 export TEZI_EULA_URL
@@ -53,10 +53,10 @@ export TEZI_EULA_URL
 # Append tar command to store uncompressed image size to ${T}.
 # If a custom rootfs type is used make sure this file is created
 # before compression.
-IMAGE_CMD_tar_append = "; du -ks ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.tar | cut -f 1 > ${T}/image-size${IMAGE_NAME_SUFFIX}"
-CONVERSION_CMD_tar_append = "; du -ks ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.tar | cut -f 1 > ${T}/image-size.${type}"
-CONVERSION_CMD_tar = "touch ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}; ${IMAGE_CMD_TAR} --numeric-owner -cf ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.tar -C ${TAR_IMAGE_ROOTFS} . || [ $? -eq 1 ]"
-CONVERSIONTYPES_append = " tar"
+IMAGE_CMD:tar:append = "; du -ks ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.tar | cut -f 1 > ${T}/image-size${IMAGE_NAME_SUFFIX}"
+CONVERSION_CMD:tar:append = "; du -ks ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.tar | cut -f 1 > ${T}/image-size.${type}"
+CONVERSION_CMD:tar = "touch ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}; ${IMAGE_CMD_TAR} --numeric-owner -cf ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.${type}.tar -C ${TAR_IMAGE_ROOTFS} . || [ $? -eq 1 ]"
+CONVERSIONTYPES:append = " tar"
 
 def get_uncompressed_size(d, type):
     path = os.path.join(d.getVar('T'), "image-size.%s" % type)
@@ -370,13 +370,13 @@ tezi_deploy_bootfs_files[cleandirs] += "${WORKDIR}/bootfs"
 tezi_deploy_bootfs_files[vardeps] += "IMAGE_BOOT_FILES"
 
 TAR_IMAGE_ROOTFS_task-image-bootfs = "${WORKDIR}/bootfs"
-IMAGE_CMD_bootfs () {
+IMAGE_CMD:bootfs () {
        :
 }
 do_image_bootfs[prefuncs] += "tezi_deploy_bootfs_files"
 
-IMAGE_TYPEDEP_ci4rail_tezi += "${TEZI_BOOT_SUFFIX} ${TEZI_ROOT_SUFFIX}"
-IMAGE_CMD_ci4rail_tezi () {
+IMAGE_TYPEDEP:ci4rail_tezi += "${TEZI_BOOT_SUFFIX} ${TEZI_ROOT_SUFFIX}"
+IMAGE_CMD:ci4rail_tezi () {
 	bbnote "Create Toradex Easy Installer tarball"
 
 	# Copy image json file to ${WORKDIR}/image-json

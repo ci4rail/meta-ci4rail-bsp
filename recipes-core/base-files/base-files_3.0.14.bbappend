@@ -3,9 +3,9 @@
 # Enabling read-only is done with sed by patching the [fstab file](https://github.com/openembedded/openembedded-core/blob/707036d4ec12ef1a260adcef78627b26e32e6540/meta/classes/rootfs-postcommands.bbclass#L93-L96).
 # This won't work with the fstab provided by `meta-toradex-demo`.
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/base-files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/base-files:"
 
-do_install_append () {
+do_install:append () {
     # create mount point for sdcard
     install -d ${D}/media/sdcard
 }

@@ -1,14 +1,14 @@
-FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI += "file://asound.state \
             file://asound.conf \
             file://state-daemon.conf"
 
-FILES_${PN} += "${sysconfdir}/alsa/state-daemon.conf  \
+FILES:${PN} += "${sysconfdir}/alsa/state-daemon.conf  \
                 ${sysconfdir}/asound.conf"
 
-FILES_alsa-states = "${sysconfdir}/alsa/asound.state"
+FILES:alsa-states = "${sysconfdir}/alsa/asound.state"
 
-do_install_append () {
+do_install:append () {
     rm -rf ${D}${localstatedir}
     install -d ${D}${sysconfdir}
     install -d ${D}${sysconfdir}/alsa

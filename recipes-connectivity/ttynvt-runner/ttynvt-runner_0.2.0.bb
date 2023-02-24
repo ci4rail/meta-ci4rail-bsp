@@ -8,12 +8,12 @@ LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=86d3f3a95c324c9479bd8986968f43
 COMPATIBLE_HOST = "(i.86|x86_64|aarch64|arm).*-linux"
 
 # Set SRC_URI subdir to ${P} so that files are unpacked into ${S}
-SRC_URI_x86-64 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-amd64.tar.gz;name=amd64"
-SRC_URI_arm = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-arm.tar.gz;name=arm"
+SRC_URI:x86-64 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-amd64.tar.gz;name=amd64"
+SRC_URI:arm = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-arm.tar.gz;name=arm"
 SRC_URI_i586 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
 SRC_URI_i686 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
-SRC_URI_aarch64 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
-SRC_URI_append = " file://${BPN}.service"
+SRC_URI:aarch64 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
+SRC_URI:append = " file://${BPN}.service"
 
 # Use github-release-checksums.sh script in yoct-images repo to update
 SRC_URI[386.md5sum] = "5558db692f2136500cfd6f35b4d2c216"
@@ -26,8 +26,8 @@ SRC_URI[arm.md5sum] = "daed01ba5b63884d8faaf9d1ccb1db14"
 SRC_URI[arm.sha256sum] = "f62eede02acca92b96f08ce9ae5b734ecd48f84fe3c9d5efaf81f041a8050aba"
 
 SYSTEMD_AUTO_ENABLE = "enable"
-SYSTEMD_SERVICE_${BPN} = "${BPN}.service"
-FILES_${PN} += "${systemd_system_unitdir}/${BPN}.service"
+SYSTEMD_SERVICE:${BPN} = "${BPN}.service"
+FILES:${PN} += "${systemd_system_unitdir}/${BPN}.service"
 
 do_install() {
     install -d ${D}${bindir}
@@ -36,6 +36,6 @@ do_install() {
     install -m 0644 ${WORKDIR}/${BPN}.service ${D}/${systemd_unitdir}/system
 }
 
-FILES_${PN} += "${bindir}/${BPN}"
+FILES:${PN} += "${bindir}/${BPN}"
 
 inherit systemd

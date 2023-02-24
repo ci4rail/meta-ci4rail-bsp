@@ -55,7 +55,7 @@ IMAGE_INSTALL += "\
                   util-linux \
                   networkmanager \
                   modemmanager \
-                  dhcp-server \
+                  kea \
                   chrony \
                   chronyc \
                   io4edge-cli \
