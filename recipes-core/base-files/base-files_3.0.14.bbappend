@@ -8,4 +8,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/base-files:"
 do_install_append () {
     # create mount point for sdcard
     install -d ${D}/media/sdcard
+    # create symlink so that boot loader can find the dtb
+    ln -s ${D}/boot/imx8mm-verdin-wifi-moducop-cpu01.stb ${D}/boot/imx8mm-verdin-wifi-dev.dtb
+    ln -s ${D}/boot/imx8mp-verdin-wifi-moducop-cpu01.stb ${D}/boot/imx8mp-verdin-wifi-dev.dtb
 }
