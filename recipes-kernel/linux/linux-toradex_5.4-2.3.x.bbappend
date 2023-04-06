@@ -8,4 +8,5 @@ SRC_URI += "file://eth.cfg \
             file://0003-reconfigure-moducop-CPU01-ETH0-LED.patch \
             file://0004-lan7431-fixed-phy-support.patch \
             file://0005-lan743x-Backport-from-linux-vanilla-kernel-e20a471.patch \
+            file://0006-add-moducop-ignition-shutdown-handler.patch \
             "
