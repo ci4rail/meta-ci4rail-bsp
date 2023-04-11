@@ -1,15 +1,15 @@
-From ecf654260711f0b7a38ebfcb408b3d59dbe5728b Mon Sep 17 00:00:00 2001
+From bbb1e43eb652f715faabf28214b1e5f27290d74c Mon Sep 17 00:00:00 2001
 From: Kas User <kas@example.com>
 Date: Thu, 6 Apr 2023 09:10:56 +0000
-Subject: [PATCH] add moducop ignition shutdown handler
+Subject: [PATCH] add moducop ignition shutdown handler with char dev
 
 ---
- .../imx8mm-verdin-wifi-moducop-cpu01.dts      |  23 ++++
- .../imx8mp-verdin-wifi-moducop-cpu01.dts      |  23 ++++
- drivers/power/reset/Kconfig                   |   7 ++
+ .../imx8mm-verdin-wifi-moducop-cpu01.dts      |  23 +++
+ .../imx8mp-verdin-wifi-moducop-cpu01.dts      |  23 +++
+ drivers/power/reset/Kconfig                   |   7 +
  drivers/power/reset/Makefile                  |   1 +
- drivers/power/reset/moducop-ignition.c        | 100 ++++++++++++++++++
- 5 files changed, 154 insertions(+)
+ drivers/power/reset/moducop-ignition.c        | 186 ++++++++++++++++++
+ 5 files changed, 240 insertions(+)
  create mode 100644 arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts
  create mode 100755 arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts
  create mode 100644 drivers/power/reset/moducop-ignition.c
@@ -104,10 +104,10 @@ index 85da3198e4e05..abdcdf58260e8 100644
  obj-$(CONFIG_POWER_RESET_MSM) += msm-poweroff.o
 diff --git a/drivers/power/reset/moducop-ignition.c b/drivers/power/reset/moducop-ignition.c
 new file mode 100644
-index 0000000000000..b9888e530b08c
+index 0000000000000..7e7d243b39a4d
 --- /dev/null
 +++ b/drivers/power/reset/moducop-ignition.c
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,186 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Hijack pm_power_off to check if the ignition is on or off.
@@ -120,6 +120,9 @@ index 0000000000000..b9888e530b08c
 + *		gpios = <&gpio3 4 GPIO_ACTIVE_HIGH>;
 + *	};
 + * 
++ * In addition, provides a character device /dev/ignition to read the ignition state.
++ * This device returns a string "0" if ignition is off, "1" if ignition is on (without \n).
++ * 
 + * Copyright (C) 2023 Ci4Rail GmbH
 + */
 +#include <linux/kernel.h>
@@ -130,7 +133,12 @@ index 0000000000000..b9888e530b08c
 +#include <linux/of_platform.h>
 +#include <linux/module.h>
 +#include <linux/reboot.h>
++#include <linux/device.h> // Header to support the kernel Driver Model
++#include <linux/fs.h> // Header for the Linux file system support
++#include <linux/uaccess.h> // Required for the copy to user function
 +
++#define DEVICE_NAME "ignition"
++#define CLASS_NAME "moducop"
 +/*
 + * Hold configuration here, cannot be more than one instance of the driver
 + * since pm_power_off itself is global.
@@ -138,6 +146,56 @@ index 0000000000000..b9888e530b08c
 +static struct gpio_desc *ignition_gpio;
 +typedef void (*prev_pm_power_off_t)(void);
 +static prev_pm_power_off_t prev_pm_power_off = NULL;
++
++static struct class *charClass =
++	NULL; ///< The device-driver class struct pointer
++static struct device *charDevice =
++	NULL; ///< The device-driver device struct pointer
++static int majorNumber;
++
++// The prototype functions for the character driver -- must come before the struct definition
++static int dev_open(struct inode *, struct file *);
++static int dev_release(struct inode *, struct file *);
++static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
++
++static struct file_operations fops = {
++	.open = dev_open,
++	.read = dev_read,
++	.release = dev_release,
++};
++
++static int dev_open(struct inode *inodep, struct file *filep)
++{
++	return 0;
++}
++
++// return "0" if ignition is off, "1" if ignition is on
++static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
++			loff_t *offset)
++{
++	int error_count = 0;
++	int value;
++
++	if (*offset > 0) {
++		return 0; // flag no more data to read
++	}
++	BUG_ON(!ignition_gpio);
++
++	value = gpiod_get_value(ignition_gpio);
++
++	error_count = copy_to_user(buffer, value ? "1" : "0", 1);
++
++	if (error_count == 0) {
++		*offset += 1;
++		return 1;
++	}
++	return -EFAULT;
++}
++
++static int dev_release(struct inode *inodep, struct file *filep)
++{
++	return 0;
++}
 +
 +static void moducop_ignition_do_poweroff(void)
 +{
@@ -169,11 +227,39 @@ index 0000000000000..b9888e530b08c
 +		return PTR_ERR(ignition_gpio);
 +	}
 +
++	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
++	if (majorNumber < 0) {
++		dev_err(&pdev->dev, "failed to register a major number");
++		return majorNumber;
++	}
++	dev_info(&pdev->dev, "registered correctly with major number %d",
++		 majorNumber);
++
++	// Register the device class
++	charClass = class_create(THIS_MODULE, CLASS_NAME);
++	if (IS_ERR(charClass)) { // Check for error and clean up if there is
++		unregister_chrdev(majorNumber, DEVICE_NAME);
++		dev_err(&pdev->dev, "failed to register device class");
++		return PTR_ERR(
++			charClass); // Correct way to return an error on a pointer
++	}
++
++	// Register the device driver
++	charDevice = device_create(charClass, NULL, MKDEV(majorNumber, 0), NULL,
++				   DEVICE_NAME);
++	if (IS_ERR(charDevice)) { // Clean up if there is an error
++		class_destroy(
++			charClass); // Repeated code but the alternative is goto statements
++		unregister_chrdev(majorNumber, DEVICE_NAME);
++		dev_err(&pdev->dev, "failed to create the device");
++		return PTR_ERR(charDevice);
++	}
++
 +	gpiod_direction_input(ignition_gpio);
 +	prev_pm_power_off = pm_power_off;
 +	pm_power_off = &moducop_ignition_do_poweroff;
-+	dev_warn(&pdev->dev, "%s: pm_power_off function replaced. Was %p",
-+		 __func__, prev_pm_power_off);
++	dev_info(&pdev->dev, "pm_power_off function replaced. Was %p",
++		 prev_pm_power_off);
 +	return 0;
 +}
 +
