@@ -1,0 +1,299 @@
+From bbb1e43eb652f715faabf28214b1e5f27290d74c Mon Sep 17 00:00:00 2001
+From: Kas User <kas@example.com>
+Date: Thu, 6 Apr 2023 09:10:56 +0000
+Subject: [PATCH] add moducop ignition shutdown handler with char dev
+
+---
+ .../imx8mm-verdin-wifi-moducop-cpu01.dts      |  23 +++
+ .../imx8mp-verdin-wifi-moducop-cpu01.dts      |  23 +++
+ drivers/power/reset/Kconfig                   |   7 +
+ drivers/power/reset/Makefile                  |   1 +
+ drivers/power/reset/moducop-ignition.c        | 186 ++++++++++++++++++
+ 5 files changed, 240 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts
+ create mode 100755 arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts
+ create mode 100644 drivers/power/reset/moducop-ignition.c
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts b/arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts
+new file mode 100644
+index 0000000000000..0b02a5a7d41f9
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts
+@@ -0,0 +1,23 @@
++// SPDX-License-Identifier: GPL-2.0+ OR MIT
++/*
++ * Copyright 2019-2021 Toradex
++ */
++
++/dts-v1/;
++
++#include "imx8mm-verdin.dtsi"
++#include "imx8mm-verdin-wifi.dtsi"
++#include "imx8mm-verdin-dev.dtsi"
++
++/ {
++	model = "Toradex Verdin iMX8M Mini WB on ModuCop CPU01";
++	compatible = "toradex,verdin-imx8mm-wifi-dev",
++		     "toradex,verdin-imx8mm-wifi",
++		     "toradex,verdin-imx8mm",
++		     "fsl,imx8mm";
++
++	moducop-ignition {
++		compatible = "moducop-ignition";
++		gpios = <&gpio3 4 GPIO_ACTIVE_HIGH>;
++	};
++};
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts b/arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts
+new file mode 100755
+index 0000000000000..f96bca152fda7
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts
+@@ -0,0 +1,23 @@
++// SPDX-License-Identifier: GPL-2.0+ OR MIT
++/*
++ * Copyright 2020 Toradex
++ */
++
++/dts-v1/;
++
++#include "imx8mp-verdin.dtsi"
++#include "imx8mp-verdin-wifi.dtsi"
++#include "imx8mp-verdin-dev.dtsi"
++
++/ {
++	model = "Toradex Verdin iMX8M Plus WB on ModuCop CPU01";
++	compatible = "toradex,verdin-imx8mp-wifi-dev",
++		     "toradex,verdin-imx8mp-wifi",
++		     "toradex,verdin-imx8mp",
++		     "fsl,imx8mp";
++
++	moducop-ignition {
++		compatible = "moducop-ignition";
++		gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
++	};
++};
+diff --git a/drivers/power/reset/Kconfig b/drivers/power/reset/Kconfig
+index a564237278ffc..51a70d1a770e9 100644
+--- a/drivers/power/reset/Kconfig
++++ b/drivers/power/reset/Kconfig
+@@ -85,6 +85,13 @@ config POWER_RESET_GPIO
+ 	  If your board needs a GPIO high/low to power down, say Y and
+ 	  create a binding in your devicetree.
+ 
++config POWER_RESET_MODUCOP_IGNITION
++	bool "Moducop ignition power-off driver"
++	depends on OF_GPIO
++	help
++	  This driver hijacks power off to check if the ignition is on or off.
++ 	  If it is on, reboot the system, otherwise power off.
++
+ config POWER_RESET_GPIO_RESTART
+ 	bool "GPIO restart driver"
+ 	depends on OF_GPIO
+diff --git a/drivers/power/reset/Makefile b/drivers/power/reset/Makefile
+index 85da3198e4e05..abdcdf58260e8 100644
+--- a/drivers/power/reset/Makefile
++++ b/drivers/power/reset/Makefile
+@@ -8,6 +8,7 @@ obj-$(CONFIG_POWER_RESET_BRCMKONA) += brcm-kona-reset.o
+ obj-$(CONFIG_POWER_RESET_BRCMSTB) += brcmstb-reboot.o
+ obj-$(CONFIG_POWER_RESET_GEMINI_POWEROFF) += gemini-poweroff.o
+ obj-$(CONFIG_POWER_RESET_GPIO) += gpio-poweroff.o
++obj-$(CONFIG_POWER_RESET_MODUCOP_IGNITION) += moducop-ignition.o
+ obj-$(CONFIG_POWER_RESET_GPIO_RESTART) += gpio-restart.o
+ obj-$(CONFIG_POWER_RESET_HISI) += hisi-reboot.o
+ obj-$(CONFIG_POWER_RESET_MSM) += msm-poweroff.o
+diff --git a/drivers/power/reset/moducop-ignition.c b/drivers/power/reset/moducop-ignition.c
+new file mode 100644
+index 0000000000000..7e7d243b39a4d
+--- /dev/null
++++ b/drivers/power/reset/moducop-ignition.c
+@@ -0,0 +1,186 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Hijack pm_power_off to check if the ignition is on or off.
++ * If it is on, reboot the system, otherwise power off.
++ * Ignition is on if the GPIO is high. 
++ * GPIO must be defined in the device tree like this:
++ * 
++ * 	moducop-ignition {
++ *		compatible = "moducop-ignition";
++ *		gpios = <&gpio3 4 GPIO_ACTIVE_HIGH>;
++ *	};
++ * 
++ * In addition, provides a character device /dev/ignition to read the ignition state.
++ * This device returns a string "0" if ignition is off, "1" if ignition is on (without \n).
++ * 
++ * Copyright (C) 2023 Ci4Rail GmbH
++ */
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/delay.h>
++#include <linux/platform_device.h>
++#include <linux/gpio/consumer.h>
++#include <linux/of_platform.h>
++#include <linux/module.h>
++#include <linux/reboot.h>
++#include <linux/device.h> // Header to support the kernel Driver Model
++#include <linux/fs.h> // Header for the Linux file system support
++#include <linux/uaccess.h> // Required for the copy to user function
++
++#define DEVICE_NAME "ignition"
++#define CLASS_NAME "moducop"
++/*
++ * Hold configuration here, cannot be more than one instance of the driver
++ * since pm_power_off itself is global.
++ */
++static struct gpio_desc *ignition_gpio;
++typedef void (*prev_pm_power_off_t)(void);
++static prev_pm_power_off_t prev_pm_power_off = NULL;
++
++static struct class *charClass =
++	NULL; ///< The device-driver class struct pointer
++static struct device *charDevice =
++	NULL; ///< The device-driver device struct pointer
++static int majorNumber;
++
++// The prototype functions for the character driver -- must come before the struct definition
++static int dev_open(struct inode *, struct file *);
++static int dev_release(struct inode *, struct file *);
++static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
++
++static struct file_operations fops = {
++	.open = dev_open,
++	.read = dev_read,
++	.release = dev_release,
++};
++
++static int dev_open(struct inode *inodep, struct file *filep)
++{
++	return 0;
++}
++
++// return "0" if ignition is off, "1" if ignition is on
++static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
++			loff_t *offset)
++{
++	int error_count = 0;
++	int value;
++
++	if (*offset > 0) {
++		return 0; // flag no more data to read
++	}
++	BUG_ON(!ignition_gpio);
++
++	value = gpiod_get_value(ignition_gpio);
++
++	error_count = copy_to_user(buffer, value ? "1" : "0", 1);
++
++	if (error_count == 0) {
++		*offset += 1;
++		return 1;
++	}
++	return -EFAULT;
++}
++
++static int dev_release(struct inode *inodep, struct file *filep)
++{
++	return 0;
++}
++
++static void moducop_ignition_do_poweroff(void)
++{
++	int value;
++	BUG_ON(!ignition_gpio);
++
++	value = gpiod_get_value(ignition_gpio);
++	//pr_emerg("moducop_ignition_do_poweroff: value=%d\n", value);
++
++	if (value) {
++		pr_emerg("Ignition is on, rebooting\n");
++		machine_restart(NULL);
++	} else {
++		pr_emerg("Ignition is off, powering off %p\n",
++			 prev_pm_power_off);
++		if (prev_pm_power_off)
++			prev_pm_power_off();
++	}
++
++	WARN_ON(1);
++}
++
++static int moducop_ignition_probe(struct platform_device *pdev)
++{
++	ignition_gpio = devm_gpiod_get(&pdev->dev, NULL, GPIOD_IN);
++	if (IS_ERR(ignition_gpio)) {
++		// dev_warn(&pdev->dev, "%s: Couldn't get ignition gpio",
++		// 	 __func__);
++		return PTR_ERR(ignition_gpio);
++	}
++
++	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
++	if (majorNumber < 0) {
++		dev_err(&pdev->dev, "failed to register a major number");
++		return majorNumber;
++	}
++	dev_info(&pdev->dev, "registered correctly with major number %d",
++		 majorNumber);
++
++	// Register the device class
++	charClass = class_create(THIS_MODULE, CLASS_NAME);
++	if (IS_ERR(charClass)) { // Check for error and clean up if there is
++		unregister_chrdev(majorNumber, DEVICE_NAME);
++		dev_err(&pdev->dev, "failed to register device class");
++		return PTR_ERR(
++			charClass); // Correct way to return an error on a pointer
++	}
++
++	// Register the device driver
++	charDevice = device_create(charClass, NULL, MKDEV(majorNumber, 0), NULL,
++				   DEVICE_NAME);
++	if (IS_ERR(charDevice)) { // Clean up if there is an error
++		class_destroy(
++			charClass); // Repeated code but the alternative is goto statements
++		unregister_chrdev(majorNumber, DEVICE_NAME);
++		dev_err(&pdev->dev, "failed to create the device");
++		return PTR_ERR(charDevice);
++	}
++
++	gpiod_direction_input(ignition_gpio);
++	prev_pm_power_off = pm_power_off;
++	pm_power_off = &moducop_ignition_do_poweroff;
++	dev_info(&pdev->dev, "pm_power_off function replaced. Was %p",
++		 prev_pm_power_off);
++	return 0;
++}
++
++static int moducop_ignition_remove(struct platform_device *pdev)
++{
++	if (pm_power_off == &moducop_ignition_do_poweroff)
++		pm_power_off = prev_pm_power_off;
++
++	return 0;
++}
++
++static const struct of_device_id of_moducop_ignition_match[] = {
++	{
++		.compatible = "moducop-ignition",
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, of_moducop_ignition_match);
++
++static struct platform_driver moducop_ignition_driver = {
++	.probe = moducop_ignition_probe,
++	.remove = moducop_ignition_remove,
++	.driver = {
++		.name = "moducop-ignition",
++		.of_match_table = of_moducop_ignition_match,
++	},
++};
++
++module_platform_driver(moducop_ignition_driver);
++
++MODULE_AUTHOR("Klaus Popp <klaus.popp@ci4rail.com>");
++MODULE_DESCRIPTION("MODUCOP ignition poweroff driver");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:moducop-ignition");
+-- 
+2.20.1
+
