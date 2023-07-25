@@ -72,4 +72,5 @@ IMAGE_INSTALL += "\
                   wireguard-tools \
                   alsa-utils \
                   ignition-watcher \
+                  modem-restart \
                 "
