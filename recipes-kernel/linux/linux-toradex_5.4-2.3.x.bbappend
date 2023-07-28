@@ -2,6 +2,7 @@ require linux-toradex-kmeta.inc
 
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI += "file://eth.cfg \
+            file://edgefarm.cfg \
             file://modem.cfg \
             file://ignition.cfg \
             file://0001-verdin-pcie-clockstrength.patch \
