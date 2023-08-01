@@ -19,6 +19,7 @@ do_install_append() {
     install -m 0644 ${WORKDIR}/persistent-openyurt-dirs.service ${D}${systemd_unitdir}/system/
 
     install -d ${D}/${localstatedir}/lib
+    install -d ${D}/opt/cni/run
 
     ln -s /data/kubelet ${D}/${localstatedir}/lib/kubelet
     ln -s /data/openyurt ${D}/${localstatedir}/lib/openyurt
