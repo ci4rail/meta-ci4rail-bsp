@@ -1,0 +1,9 @@
+[Unit]
+Description=Create persistent data directory for openyurt
+Before=kubelet.service
+
+[Service]
+ExecStart=/bin/mkdir -p -m 0700 /data/kubelet /data/openyurt /data/yurthub /data/opt_cni_run
+
+[Install]
+WantedBy=multi-user.target
