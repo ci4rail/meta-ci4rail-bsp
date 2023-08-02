@@ -19,7 +19,7 @@ do_install_append() {
     install -m 0644 ${WORKDIR}/persistent-openyurt-dirs.service ${D}${systemd_unitdir}/system/
 
     install -d ${D}/${localstatedir}/lib
-    install -d ${D}/opt/cni/run
+    install -d ${D}/opt/cni
 
     ln -s /data/kubelet ${D}/${localstatedir}/lib/kubelet
     ln -s /data/openyurt ${D}/${localstatedir}/lib/openyurt
@@ -28,3 +28,4 @@ do_install_append() {
 }
 
 REQUIRED_DISTRO_FEATURES= "systemd"
+FILES_${PN} = "/opt/cni/run ${localstatedir}/lib/kubelet ${localstatedir}/lib/openyurt ${localstatedir}/lib/yurthub"
