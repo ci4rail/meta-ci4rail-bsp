@@ -10,3 +10,10 @@ pkg_postinst_${PN}_append () {
 		systemctl $OPTS mask systemd-networkd-wait-online.service
 	fi
 }
+
+
+do_install_append() {
+	# Patch /lib/systemd/system/systemd-rfkill.service with additional dependency
+	# /var must be writeable when rfkill service is started
+	sed -i -e 's/After=sys-devices-virtual-misc-rfkill.device systemd-remount-fs.service/After=After=sys-devices-virtual-misc-rfkill.device systemd-remount-fs.service reload-systemd.service/' ${D}${systemd_unitdir}/system/systemd-rfkill.service
+}
