@@ -21,6 +21,7 @@ require classes/ci4rail_add_rootfs_version.inc
 
 IMAGE_LINGUAS = "en-us"
 
+
 IMAGE_FEATURES += "\
                    read-only-rootfs \
                    package-management \
