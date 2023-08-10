@@ -1,0 +1,37 @@
+From 660ffdd7740bd2eec0362c1a99496187aec58864 Mon Sep 17 00:00:00 2001
+From: Kas User <kas@example.com>
+Date: Mon, 7 Aug 2023 14:21:05 +0000
+Subject: [PATCH 7/7] Provide standard sensor monitoring via the HWMON
+ subsystem by registering the sensors with hwmon when CONFIG_THERMAL_HWMON is
+ enabled.
+
+---
+ drivers/thermal/imx8mm_thermal.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/thermal/imx8mm_thermal.c b/drivers/thermal/imx8mm_thermal.c
+index 0626ae2de2917..6f2185de7e0f8 100644
+--- a/drivers/thermal/imx8mm_thermal.c
++++ b/drivers/thermal/imx8mm_thermal.c
+@@ -17,6 +17,7 @@
+ #include <linux/thermal.h>
+ 
+ #include "thermal_core.h"
++#include "thermal_hwmon.h"
+ 
+ #define TER			0x0	/* TMU enable */
+ #define	TPS			0x4
+@@ -186,6 +187,10 @@ static int imx8mm_tmu_probe(struct platform_device *pdev)
+ 
+ 		tmu->sensors[i].hw_id = i;
+ 
++		if (thermal_add_hwmon_sysfs(tmu->sensors[i].tzd))
++			dev_warn(&pdev->dev,
++				 "Failed to add hwmon sysfs attributes\n");
++
+ 		trips = of_thermal_get_trip_points(tmu->sensors[i].tzd);
+ 
+ 		/* get the thermal trip temp */
+-- 
+2.20.1
+
