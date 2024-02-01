@@ -1,0 +1,9 @@
+[Unit]
+Description=Reload systemd manager configuration after etc overlay has been mounted
+After=etc.mount
+
+[Service]
+ExecStart=systemctl daemon-reload
+
+[Install]
+WantedBy=multi-user.target
