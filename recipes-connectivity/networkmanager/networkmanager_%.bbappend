@@ -11,7 +11,8 @@ SRC_URI += "file://eth2.connection \
             file://ethernet-usb_ext6.nmconnection \
             file://ethernet-usb_ext7.nmconnection \
             file://ethernet-usb_ext8.nmconnection \
-            file://10-dhcpd-restart.sh"
+            file://10-dhcpd-restart.sh \
+            file://0001-set-AUTOCONNECT_RESET_RETRIES_TIMER-to-30s.patch"
 
 PACKAGECONFIG_remove = "ifupdown dnsmasq"
 
