@@ -67,8 +67,9 @@ IMAGE_INSTALL += "\
                   coreutils \
                   tar \
                   iperf3 \
-                  wireguard-module \
                   wireguard-tools \
                   alsa-utils \
-                  ignition-watcher \
+                  device-tree-overlays \
                 "
+
+#                  ignition-watcher \
