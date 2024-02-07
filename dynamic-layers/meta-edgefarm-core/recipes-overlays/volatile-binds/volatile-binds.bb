@@ -21,7 +21,7 @@ VOLATILE_BINDS ?= "\
     /var/volatile/spool /var/spool\n\
     /data/srv /srv\n\
     /data/opt_cni /opt/cni\n\
-    /data/openyurt /openyurt\n\
+    /data/usr_local /usr/local\n\
 "
 VOLATILE_BINDS[type] = "list"
 VOLATILE_BINDS[separator] = "\n"

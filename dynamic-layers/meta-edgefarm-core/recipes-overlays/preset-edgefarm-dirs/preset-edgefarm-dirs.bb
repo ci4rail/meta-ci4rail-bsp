@@ -12,3 +12,4 @@ do_install() {
 
 FILES_${PN} += "/opt/cni/bin"
 FILES_${PN} += "/usr/local/etc"
+FILES_${PN} += "/openyurt"P
