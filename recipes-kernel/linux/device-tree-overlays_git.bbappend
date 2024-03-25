@@ -1,0 +1,1 @@
+MACHINE_PREFIX = "verdin-imx8mp"
