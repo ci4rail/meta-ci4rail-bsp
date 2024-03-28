@@ -73,4 +73,5 @@ IMAGE_INSTALL += "\
                   alsa-utils \
                   ignition-watcher \
                   modem-restart \
+                  device-tree-overlays \
                 "
