@@ -14,13 +14,14 @@ SRC_URI_i586 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v
 SRC_URI_i686 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
 SRC_URI_aarch64 = "https://github.com/ci4rail/io4edge-client-go/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
 
-SRC_URI[386.md5sum] = "adc8f11f2b545f34c0082e423f88af21"
-SRC_URI[386.sha256sum] = "694694db4f51e6ed6522d37b492c28e4b41afca778c8f184b2414377f040d297"
-SRC_URI[amd64.md5sum] = "365fa0dc4977a5828a17247820671800"
-SRC_URI[amd64.sha256sum] = "684c1131ce88f01a5389b1e0f6178f736f7db737917c495e268f5e1c4a0fba1f"
-SRC_URI[arm64.md5sum] = "8aba92fbebbbf263a18a737fd13b80e8"
-SRC_URI[arm64.sha256sum] = "84932c1b449003156474165ea7c3b2bdb8bd57b14300ea759171096204ba0b7a"
-SRC_URI[arm.md5sum] = "7f2ac83f85390b39204ff4340de2ed77"
+SRC_URI[386.md5sum] = "03193f6b4a643704ae2409426822f02e"
+SRC_URI[386.sha256sum] = "8149a2eb4b36f01be90f1ffb28f49e9ffe2d4a2e2038ccef420c9901bd59d1c2"
+SRC_URI[amd64.md5sum] = "c7ef7eabd1167beb53136d1eee30ba36"
+SRC_URI[amd64.sha256sum] = "adf8cb1372510cc2f378bb4d3404c71e858a187c20c52421388217c98caceffe"
+SRC_URI[arm64.md5sum] = "210bfd0900e9f33db63832f723ee9b46"
+SRC_URI[arm64.sha256sum] = "7eaa901700fe696b480377596543965a3f4b923205a3d1f347a0abb571d93a1d"
+SRC_URI[arm.md5sum] = "8a89509bda8556290b06635dbf3a6d02"
+SRC_URI[arm.sha256sum] = "f7833c2cbd7be99e9a4fb5722978e0734e15b4bb8e51002f37f9c56bcf6859a2"
 
 do_install() {
     install -d ${D}${bindir}
