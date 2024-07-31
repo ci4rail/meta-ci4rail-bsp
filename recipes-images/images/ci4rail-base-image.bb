@@ -74,4 +74,8 @@ IMAGE_INSTALL += "\
                   ignition-watcher \
                   modem-restart \
                   device-tree-overlays \
+                  xdelta3 \
+                  tree \
+                  jq \
+                  mender-docker-compose \
                 "
