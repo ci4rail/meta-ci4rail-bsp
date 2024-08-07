@@ -78,4 +78,5 @@ IMAGE_INSTALL += "\
                   tree \
                   jq \
                   mender-docker-compose \
+                  conntrack-tools \
                 "
