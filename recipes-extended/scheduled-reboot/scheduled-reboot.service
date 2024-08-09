@@ -1,0 +1,9 @@
+[Unit]
+Description=Starts script checking for scheduled reboot
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/watch_reboot.sh
+
+[Install]
+WantedBy=multi-user.target
