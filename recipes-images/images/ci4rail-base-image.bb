@@ -79,4 +79,5 @@ IMAGE_INSTALL += "\
                   jq \
                   mender-docker-compose \
                   conntrack-tools \
+                  scheduled-reboot \
                 "

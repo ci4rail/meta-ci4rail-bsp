@@ -3,7 +3,7 @@ Description=Starts script checking for scheduled reboot
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/watch_reboot.sh
+ExecStart=/usr/bin/watch_reboot_time.sh
 
 [Install]
 WantedBy=multi-user.target
