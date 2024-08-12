@@ -80,4 +80,5 @@ IMAGE_INSTALL += "\
                   mender-docker-compose \
                   conntrack-tools \
                   scheduled-reboot \
+                  tailscale \
                 "
