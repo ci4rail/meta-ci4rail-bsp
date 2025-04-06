@@ -28,14 +28,15 @@ IMAGE_FEATURES += "\
 
 ROOTFS_RO_UNNEEDED ?= "update-rc.d base-passwd"
 
+# packagegroup-base-tdx-cli \
+# packagegroup-machine-tdx-cli \
+# packagegroup-networking-tdx-cli \
+# packagegroup-wifi-tdx-cli \
+# packagegroup-wifi-fw-tdx-cli 
+#
 IMAGE_INSTALL += "\
                   packagegroup-boot \
                   packagegroup-basic \
-                  packagegroup-base-tdx-cli \
-                  packagegroup-machine-tdx-cli \
-                  packagegroup-networking-tdx-cli \
-                  packagegroup-wifi-tdx-cli \
-                  packagegroup-wifi-fw-tdx-cli \
                   udev-extraconf \
                   ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'timestamp-service systemd-analyze', '', d)} \
                   bzip2 \
@@ -56,13 +57,6 @@ IMAGE_INSTALL += "\
                   networkmanager \
                   modemmanager \
                   kea \
-                  chrony \
-                  chronyc \
-                  io4edge-cli \
-                  ttynvt \
-                  ttynvt-runner \
-                  socketcan-io4edge \
-                  socketcan-io4edge-runner \
                   nano \
                   coreutils \
                   tar \
@@ -72,4 +66,3 @@ IMAGE_INSTALL += "\
                   device-tree-overlays \
                 "
 
-#                  ignition-watcher \
