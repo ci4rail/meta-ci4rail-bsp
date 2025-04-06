@@ -28,16 +28,51 @@ IMAGE_FEATURES += "\
 
 ROOTFS_RO_UNNEEDED ?= "update-rc.d base-passwd"
 
-# packagegroup-base-tdx-cli \
-# packagegroup-machine-tdx-cli \
-# packagegroup-networking-tdx-cli \
-# packagegroup-wifi-tdx-cli \
-# packagegroup-wifi-fw-tdx-cli 
-#
+
+
 IMAGE_INSTALL += "\
                   packagegroup-boot \
                   packagegroup-basic \
+                  can-utils \
+                  dosfstools \
+                  e2fsprogs-mke2fs \
+                  exfat-utils \
+                  iproute2 \
+                  libgomp \
+                  libgpiod-tools \
+                  mtd-utils \
+                  set-hostname \
+                  u-boot-fw-utils \
+                  udev-toradex-rules \
+                  uhubctl \
+                  util-linux-fstrim \
+                  libusbgx \
+                  libusbgx-config \
+                  libusbgx-examples \
+                  tdx-info \
                   udev-extraconf \
+                  avahi-autoipd \
+                  curl \
+                  linuxptp \
+                  nfs-utils-client \
+                  ppp \
+                  ptpd \
+                  tcpdump \         
+                  hostapd \
+                  hostapd-example \
+                  wireless-regdb-static \
+                  linux-firmware-ath10k    \
+                  linux-firmware-iw416     \
+                  linux-firmware-nxp89xx   \
+                  linux-firmware-sd8686    \
+                  linux-firmware-sd8688    \
+                  linux-firmware-sd8787    \
+                  linux-firmware-sd8797    \
+                  linux-firmware-sd8887    \
+                  linux-firmware-sd8997    \
+                  linux-firmware-ralink    \
+                  linux-firmware-rtl8192cu \
+                  linux-firmware-rtl8188   \         
                   ${@bb.utils.contains('DISTRO_FEATURES', 'systemd', 'timestamp-service systemd-analyze', '', d)} \
                   bzip2 \
                   e2fsprogs \
@@ -63,6 +98,5 @@ IMAGE_INSTALL += "\
                   iperf3 \
                   wireguard-tools \
                   alsa-utils \
-                  device-tree-overlays \
                 "
 
