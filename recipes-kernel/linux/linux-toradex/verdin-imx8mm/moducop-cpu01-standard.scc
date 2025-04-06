@@ -1,0 +1,10 @@
+define KMACHINE moducop-cpu01
+define KTYPE standard
+define KARCH arm64
+
+# Include the base Toradex configuration
+include cfg/base/base.scc
+include cfg/arm64/arm64.scc
+
+
+# Add your custom configuration (if any)
