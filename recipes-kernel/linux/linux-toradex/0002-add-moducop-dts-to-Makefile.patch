@@ -1,0 +1,32 @@
+From 69dc9dae63b827233dc77394ee5e2bf14921e5da Mon Sep 17 00:00:00 2001
+From: kas User <kas@example.com>
+Date: Wed, 16 Apr 2025 18:30:13 +0000
+Subject: [PATCH 2/2] add moducop dts to Makefile
+
+---
+ arch/arm64/boot/dts/freescale/Makefile | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
+index 7eb66d728143a..52a0908cc39a6 100644
+--- a/arch/arm64/boot/dts/freescale/Makefile
++++ b/arch/arm64/boot/dts/freescale/Makefile
+@@ -116,6 +116,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-dev.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-ivy.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-mallow.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-yavia.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-moducop-cpu01.dtb
+ 
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-bsh-smm-s2.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-bsh-smm-s2pro.dtb
+@@ -165,6 +166,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mp-verdin-wifi-dev.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mp-verdin-wifi-ivy.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mp-verdin-wifi-mallow.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mp-verdin-wifi-yavia.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx8mp-verdin-wifi-moducop-cpu01.dtb
+ 
+ imx8mp-evk-revb4-dtbs := imx8mp-evk.dtb imx8mp-evk-revb4.dtbo
+ imx8mp-evk-revb4-rm67191-dtbs := imx8mp-evk-rm67191.dtb imx8mp-evk-revb4.dtbo
+-- 
+2.39.5
+

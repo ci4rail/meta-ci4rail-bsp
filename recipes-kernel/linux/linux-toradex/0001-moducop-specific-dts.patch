@@ -1,0 +1,75 @@
+From 4569c37a8ca70fbebd863ef16166293aa5de2fdc Mon Sep 17 00:00:00 2001
+From: kas User <kas@example.com>
+Date: Wed, 16 Apr 2025 12:35:11 +0000
+Subject: [PATCH] moducop specific dts
+
+---
+ .../imx8mm-verdin-wifi-moducop-cpu01.dts      | 23 +++++++++++++++++++
+ .../imx8mp-verdin-wifi-moducop-cpu01.dts      | 23 +++++++++++++++++++
+ 2 files changed, 46 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts b/arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts
+new file mode 100644
+index 0000000000000..21af48d4b7056
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mm-verdin-wifi-moducop-cpu01.dts
+@@ -0,0 +1,23 @@
++// SPDX-License-Identifier: GPL-2.0+ OR MIT
++/*
++ * Copyright 2025 Ci4Rail
++ */
++
++/dts-v1/;
++
++#include "imx8mm-verdin.dtsi"
++#include "imx8mm-verdin-wifi.dtsi"
++#include "imx8mm-verdin-dev.dtsi"
++
++/ {
++	model = "Toradex Verdin iMX8M Mini WB on ModuCop CPU01";
++	compatible = "toradex,verdin-imx8mm-wifi-dev",
++		     "toradex,verdin-imx8mm-wifi",
++		     "toradex,verdin-imx8mm",
++		     "fsl,imx8mm";
++
++	moducop-ignition {
++		compatible = "moducop-ignition";
++		gpios = <&gpio3 4 GPIO_ACTIVE_HIGH>;
++	};
++};
+\ No newline at end of file
+diff --git a/arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts b/arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts
+new file mode 100644
+index 0000000000000..9a277f4566d0e
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mp-verdin-wifi-moducop-cpu01.dts
+@@ -0,0 +1,23 @@
++// SPDX-License-Identifier: GPL-2.0+ OR MIT
++/*
++ * Copyright 2025 Ci4Rail
++ */
++
++/dts-v1/;
++
++#include "imx8mp-verdin.dtsi"
++#include "imx8mp-verdin-wifi.dtsi"
++#include "imx8mp-verdin-dev.dtsi"
++
++/ {
++	model = "Toradex Verdin iMX8M Plus WB on ModuCop CPU01";
++	compatible = "toradex,verdin-imx8mp-wifi-dev",
++		     "toradex,verdin-imx8mp-wifi",
++		     "toradex,verdin-imx8mp",
++		     "fsl,imx8mp";
++
++	moducop-ignition {
++		compatible = "moducop-ignition";
++		gpios = <&gpio1 0 GPIO_ACTIVE_HIGH>;
++	};
++};
+\ No newline at end of file
+-- 
+2.39.5
+
