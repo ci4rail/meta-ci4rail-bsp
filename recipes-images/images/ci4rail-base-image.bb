@@ -98,5 +98,6 @@ IMAGE_INSTALL += "\
                   iperf3 \
                   wireguard-tools \
                   alsa-utils \
+                  wget \
                 "
 

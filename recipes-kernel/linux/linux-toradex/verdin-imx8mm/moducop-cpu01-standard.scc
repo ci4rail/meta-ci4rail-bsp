@@ -8,3 +8,6 @@ include cfg/arm64/arm64.scc
 
 
 # Add your custom configuration (if any)
+include modem.cfg
+include netext.cfg
+include eth2.cfg
