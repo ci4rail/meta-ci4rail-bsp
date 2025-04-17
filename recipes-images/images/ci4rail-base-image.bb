@@ -13,6 +13,9 @@ GIT_VERSION := "${@d.getVar('BB_ORIGENV',False).getVar('IMAGE_GIT_VERSION', Fals
 NAME_SUFFIX := "${@d.getVar('BB_ORIGENV',False).getVar('IMAGE_NAME_SUFFIX', False) or ''}"
 IMAGE_NAME = "${MACHINE_NAME}_${IMAGE_BASENAME}_${GIT_VERSION}${NAME_SUFFIX}"
 
+# At the moment, we don't use overlays, so the toradex_mender_update_devicetree_overlays() would fail
+ROOTFS_POSTPROCESS_COMMAND:remove = " toradex_mender_update_devicetree_overlays;"
+
 # Copy Licenses to image /usr/share/common-license
 COPY_LIC_MANIFEST ?= "1"
 COPY_LIC_DIRS ?= "1"

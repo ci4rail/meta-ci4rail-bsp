@@ -11,12 +11,15 @@ SRC_URI += "file://eth2.connection \
             file://ethernet-usb_ext6.nmconnection \
             file://ethernet-usb_ext7.nmconnection \
             file://ethernet-usb_ext8.nmconnection \
-            file://10-dhcpd-restart.sh"
+            "
 
-PACKAGECONFIG:remove = "ifupdown dnsmasq"
+
+# file://10-dhcpd-restart.sh
 
 # configure networkmanager with modemmanager support
-PACKAGECONFIG:append = " modemmanager ppp"
+#PACKAGECONFIG:remove = "ifupdown dnsmasq"
+PACKAGECONFIG:remove = "ifupdown "
+PACKAGECONFIG:append = " modemmanager ppp wwan wifi"
 RPROVIDES:${PN} = "network-configuration"
 RDEPENDS:${PN} += "bash"
 
@@ -31,5 +34,6 @@ do_install:append() {
     install -m 0600 ${WORKDIR}/ethernet-usb_ext6.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -m 0600 ${WORKDIR}/ethernet-usb_ext7.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -m 0600 ${WORKDIR}/ethernet-usb_ext8.nmconnection ${D}${sysconfdir}/NetworkManager/system-connections/
-    install -m 0755 ${WORKDIR}/10-dhcpd-restart.sh ${D}${sysconfdir}/NetworkManager/dispatcher.d/
 }
+
+#    install -m 0755 ${WORKDIR}/10-dhcpd-restart.sh ${D}${sysconfdir}/NetworkManager/dispatcher.d/
