@@ -8,6 +8,7 @@ SRC_URI:append = " file://0001-moducop-specific-dts.patch \
                    file://modem.cfg \
                    file://eth2.cfg \
                    file://netext.cfg \
+                   file://general.cfg \
                 "
 
 

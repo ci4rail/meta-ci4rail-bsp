@@ -16,6 +16,10 @@ IMAGE_NAME = "${MACHINE_NAME}_${IMAGE_BASENAME}_${GIT_VERSION}${NAME_SUFFIX}"
 # At the moment, we don't use overlays, so the toradex_mender_update_devicetree_overlays() would fail
 ROOTFS_POSTPROCESS_COMMAND:remove = " toradex_mender_update_devicetree_overlays;"
 
+OVERLAYFS_ETC_MOUNT_POINT ?= "/data"
+OVERLAYFS_ETC_FSTYPE ?= "ext4"
+OVERLAYFS_ETC_DEVICE ?= "/dev/mmcblk2p4"
+
 # Copy Licenses to image /usr/share/common-license
 COPY_LIC_MANIFEST ?= "1"
 COPY_LIC_DIRS ?= "1"
@@ -26,9 +30,9 @@ IMAGE_LINGUAS = "en-us"
 
 IMAGE_FEATURES += "\
                    read-only-rootfs \
-                   package-management \
+                   overlayfs-etc \
                    "
-
+#package-management
 ROOTFS_RO_UNNEEDED ?= "update-rc.d base-passwd"
 
 
@@ -82,6 +86,7 @@ IMAGE_INSTALL += "\
                   e2fsprogs-resize2fs \
                   e2fsprogs-tune2fs \
                   ethtool \
+                  chrony \
                   gpsd \
                   grep \
                   lsof \
