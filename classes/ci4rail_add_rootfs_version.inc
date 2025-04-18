@@ -7,4 +7,4 @@ add_rootfs_version () {
 add_rootfs_version[doc] = "Store distro and image name and version in files on rfs."
 
 # add the rootfs version to the welcome banner
-ROOTFS_POSTPROCESS_COMMAND += "add_rootfs_version;"
+ROOTFS_POSTPROCESS_COMMAND:append = " add_rootfs_version;"

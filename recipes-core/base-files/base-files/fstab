@@ -1,5 +1,3 @@
-# stock fstab - you probably want to override this with a machine specific one
-
 /dev/root   /               auto      defaults                                             1  1
 proc        /proc           proc      defaults                                             0  0
 devpts      /dev/pts        devpts    mode=0620,gid=5                                      0  0
@@ -7,5 +5,5 @@ usbdevfs    /proc/bus/usb   usbdevfs  noauto                                    
 tmpfs       /run            tmpfs     mode=0755,nodev,nosuid,strictatime                   0  0
 tmpfs       /var/volatile   tmpfs     defaults                                             0  0
 
-# uncomment this if your device has a SD/MMC/Transflash slot
+# automount SD card
 /dev/mmcblk1p1 /media/sdcard vfat,ext4  auto,nofail,noatime,rw,user                        0  2
