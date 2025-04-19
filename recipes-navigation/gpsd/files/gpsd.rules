@@ -1,0 +1,3 @@
+# u-blox AG, u-blox 8 (tested with GNSS Evaluation Kit EKV-M8N) [linux module: cdc_acm]
+# This rules ensures that modemmanager does not claim the device
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a8", SYMLINK+="gps%n", TAG+="systemd", ENV{SYSTEMD_WANTS}="gpsdctl@%k.service", ENV{ID_MM_DEVICE_IGNORE}="1"

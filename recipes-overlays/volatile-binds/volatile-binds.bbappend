@@ -1,3 +1,3 @@
 VOLATILE_BINDS += " \
-    /data/home_root  /home/root\n\
+    /data/overlay-root  /root\n\
 "

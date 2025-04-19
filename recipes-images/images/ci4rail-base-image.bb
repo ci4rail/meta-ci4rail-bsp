@@ -45,6 +45,7 @@ IMAGE_INSTALL += "\
                   e2fsprogs-mke2fs \
                   exfat-utils \
                   iproute2 \
+                  iptables \
                   libgomp \
                   libgpiod-tools \
                   mtd-utils \
