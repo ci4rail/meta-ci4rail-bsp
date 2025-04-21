@@ -108,5 +108,6 @@ IMAGE_INSTALL += "\
                   wireguard-tools \
                   alsa-utils \
                   wget \
+                  io4edge-cli \
                 "
 
