@@ -1,0 +1,37 @@
+#!/bin/sh
+
+DEVICE="@MENDER_STORAGE_DEVICE@"
+PART_NUM="@MENDER_DATA_PART_NUMBER@"
+PARTITION="${DEVICE}p${PART_NUM}"
+
+echo "[INFO] Resizing partition ${PARTITION} to fill remaining space..."
+
+# Get the start sector of partition
+START_SECTOR=$(fdisk -l "$DEVICE" | awk -v part="$PARTITION" '$1 == part { print $4 }')
+
+if [ -z "$START_SECTOR" ]; then
+    echo "[ERROR] Could not find start sector of $PARTITION"
+    exit 1
+fi
+
+echo "[INFO] Found start sector: $START_SECTOR"
+
+# Create fdisk script
+FDISK_SCRIPT=$(mktemp)
+cat <<EOF > "$FDISK_SCRIPT"
+d
+$PART_NUM
+n
+p
+$START_SECTOR
+
+w
+EOF
+
+# Apply the fdisk script
+fdisk "$DEVICE" < "$FDISK_SCRIPT"
+
+# Remove temp file
+rm "$FDISK_SCRIPT"
+
+echo "tezi-installer-finished" > /dev/console

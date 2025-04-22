@@ -18,7 +18,9 @@ ROOTFS_POSTPROCESS_COMMAND:remove = " toradex_mender_update_devicetree_overlays;
 
 OVERLAYFS_ETC_MOUNT_POINT ?= "/data"
 OVERLAYFS_ETC_FSTYPE ?= "ext4"
-OVERLAYFS_ETC_DEVICE ?= "/dev/mmcblk2p4"
+OVERLAYFS_ETC_DEVICE ?= "${MENDER_DATA_PART}"
+OVERLAYFS_ETC_CREATE_MOUNT_DIRS ?= "0"
+OVERLAYFS_ETC_EXPOSE_LOWER ?= "1"
 
 # Copy Licenses to image /usr/share/common-license
 COPY_LIC_MANIFEST ?= "1"
