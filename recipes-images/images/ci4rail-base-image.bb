@@ -111,5 +111,12 @@ IMAGE_INSTALL += "\
                   alsa-utils \
                   wget \
                   io4edge-cli \
+                  ttynvt \
+                  ttynvt-runner \
+                  socketcan-io4edge \
+                  socketcan-io4edge-runner \
+                  xdelta3 \
+                  tree \
+                  jq \
                 "
 

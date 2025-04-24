@@ -16,4 +16,4 @@ RDEPENDS:${PN} += "fuse"
 
 S = "${WORKDIR}/git"
 
-inherit autotools pkgconfig features_check
+inherit autotools pkgconfig
