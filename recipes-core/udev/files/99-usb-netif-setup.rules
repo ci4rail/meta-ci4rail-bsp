@@ -1,0 +1,3 @@
+ACTION=="add", ATTRS{interface}=="TinyUSB Network", PROGRAM="/usr/bin/usb-netif-interface-name.sh %k", NAME="%c" \
+  RUN+="/usr/bin/usb-netif-setup.sh %c"
+
