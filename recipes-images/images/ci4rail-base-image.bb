@@ -118,5 +118,6 @@ IMAGE_INSTALL += "\
                   xdelta3 \
                   tree \
                   jq \
+                  tailscale \
                 "
 
