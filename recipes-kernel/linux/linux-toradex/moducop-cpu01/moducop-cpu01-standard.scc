@@ -11,3 +11,5 @@ include cfg/arm64/arm64.scc
 include modem.cfg
 include netext.cfg
 include eth2.cfg
+include general.cfg
+include ignition.cfg

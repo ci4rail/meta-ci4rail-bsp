@@ -39,6 +39,8 @@ _discover_compose() {
         _docker_compose_cmd="$docker_cmd compose"
     elif docker-compose version < /dev/null > /dev/null 2>&1; then
         _docker_compose_cmd="docker-compose"
+    elif podman-compose version < /dev/null > /dev/null 2>&1; then
+        _docker_compose_cmd="podman-compose"
     else
         echo "error: could not find executable for Docker Compose" 1>&2
         echo "error: is Docker Compose installed?" 1>&2

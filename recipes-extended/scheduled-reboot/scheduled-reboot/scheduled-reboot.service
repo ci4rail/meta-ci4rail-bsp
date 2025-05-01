@@ -1,0 +1,14 @@
+#
+# Could have done this with a timer unit, but I haven't
+# found a simple way to let the user modify the boot time by manipulating
+# a file under /etc
+#
+[Unit]
+Description=Starts script checking for scheduled reboot
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/watch_reboot_time.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,233 @@
+From 6dfa8ed2f9a8ac6cb8895a206e6d17827161e345 Mon Sep 17 00:00:00 2001
+From: kas User <kas@example.com>
+Date: Thu, 1 May 2025 15:28:45 +0000
+Subject: [PATCH 4/4] add moducop ignition shutdown handler with char dev
+
+---
+ drivers/power/reset/Kconfig            |   6 +
+ drivers/power/reset/Makefile           |   1 +
+ drivers/power/reset/moducop-ignition.c | 186 +++++++++++++++++++++++++
+ 3 files changed, 193 insertions(+)
+ create mode 100644 drivers/power/reset/moducop-ignition.c
+
+diff --git a/drivers/power/reset/Kconfig b/drivers/power/reset/Kconfig
+index 411e00b255d69..77f3f686d53fb 100644
+--- a/drivers/power/reset/Kconfig
++++ b/drivers/power/reset/Kconfig
+@@ -304,4 +304,10 @@ config POWER_MLXBF
+ 	help
+ 	  This driver supports reset or low power mode handling for Mellanox BlueField.
+ 
++config POWER_RESET_MODUCOP_IGNITION
++	bool "Moducop ignition power-off driver"
++	depends on OF_GPIO
++	help
++	  This driver hijacks power off to check if the ignition is on or off.
++ 	  If it is on, reboot the system, otherwise power off.+
+ endif
+diff --git a/drivers/power/reset/Makefile b/drivers/power/reset/Makefile
+index a95d1bd275d18..bb1e860575c52 100644
+--- a/drivers/power/reset/Makefile
++++ b/drivers/power/reset/Makefile
+@@ -36,3 +36,4 @@ obj-$(CONFIG_SYSCON_REBOOT_MODE) += syscon-reboot-mode.o
+ obj-$(CONFIG_POWER_RESET_SC27XX) += sc27xx-poweroff.o
+ obj-$(CONFIG_NVMEM_REBOOT_MODE) += nvmem-reboot-mode.o
+ obj-$(CONFIG_POWER_MLXBF) += pwr-mlxbf.o
++obj-$(CONFIG_POWER_RESET_MODUCOP_IGNITION) += moducop-ignition.o
+\ No newline at end of file
+diff --git a/drivers/power/reset/moducop-ignition.c b/drivers/power/reset/moducop-ignition.c
+new file mode 100644
+index 0000000000000..85b705fd446b6
+--- /dev/null
++++ b/drivers/power/reset/moducop-ignition.c
+@@ -0,0 +1,186 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Hijack pm_power_off to check if the ignition is on or off.
++ * If it is on, reboot the system, otherwise power off.
++ * Ignition is on if the GPIO is high. 
++ * GPIO must be defined in the device tree like this:
++ * 
++ * 	moducop-ignition {
++ *		compatible = "moducop-ignition";
++ *		gpios = <&gpio3 4 GPIO_ACTIVE_HIGH>;
++ *	};
++ * 
++ * In addition, provides a character device /dev/ignition to read the ignition state.
++ * This device returns a string "0" if ignition is off, "1" if ignition is on (without \n).
++ * 
++ * Copyright (C) 2025 Ci4Rail GmbH
++ */
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/delay.h>
++#include <linux/platform_device.h>
++#include <linux/gpio/consumer.h>
++#include <linux/of_platform.h>
++#include <linux/module.h>
++#include <linux/reboot.h>
++#include <linux/device.h> // Header to support the kernel Driver Model
++#include <linux/fs.h> // Header for the Linux file system support
++#include <linux/uaccess.h> // Required for the copy to user function
++
++#define DEVICE_NAME "ignition"
++#define CLASS_NAME "moducop"
++/*
++ * Hold configuration here, cannot be more than one instance of the driver
++ * since pm_power_off itself is global.
++ */
++static struct gpio_desc *ignition_gpio;
++typedef void (*prev_pm_power_off_t)(void);
++static prev_pm_power_off_t prev_pm_power_off = NULL;
++
++static struct class *charClass =
++	NULL; ///< The device-driver class struct pointer
++static struct device *charDevice =
++	NULL; ///< The device-driver device struct pointer
++static int majorNumber;
++
++// The prototype functions for the character driver -- must come before the struct definition
++static int dev_open(struct inode *, struct file *);
++static int dev_release(struct inode *, struct file *);
++static ssize_t dev_read(struct file *, char *, size_t, loff_t *);
++
++static struct file_operations fops = {
++	.open = dev_open,
++	.read = dev_read,
++	.release = dev_release,
++};
++
++static int dev_open(struct inode *inodep, struct file *filep)
++{
++	return 0;
++}
++
++// return "0" if ignition is off, "1" if ignition is on
++static ssize_t dev_read(struct file *filep, char *buffer, size_t len,
++			loff_t *offset)
++{
++	int error_count = 0;
++	int value;
++
++	if (*offset > 0) {
++		return 0; // flag no more data to read
++	}
++	BUG_ON(!ignition_gpio);
++
++	value = gpiod_get_value(ignition_gpio);
++
++	error_count = copy_to_user(buffer, value ? "1" : "0", 1);
++
++	if (error_count == 0) {
++		*offset += 1;
++		return 1;
++	}
++	return -EFAULT;
++}
++
++static int dev_release(struct inode *inodep, struct file *filep)
++{
++	return 0;
++}
++
++static void moducop_ignition_do_poweroff(void)
++{
++	int value;
++	BUG_ON(!ignition_gpio);
++
++	value = gpiod_get_value(ignition_gpio);
++	//pr_emerg("moducop_ignition_do_poweroff: value=%d\n", value);
++
++	if (value) {
++		pr_emerg("Ignition is on, rebooting\n");
++		machine_restart(NULL);
++	} else {
++		pr_emerg("Ignition is off, powering off %p\n",
++			 prev_pm_power_off);
++		if (prev_pm_power_off)
++			prev_pm_power_off();
++	}
++
++	WARN_ON(1);
++}
++
++static int moducop_ignition_probe(struct platform_device *pdev)
++{
++	ignition_gpio = devm_gpiod_get(&pdev->dev, NULL, GPIOD_IN);
++	if (IS_ERR(ignition_gpio)) {
++		// dev_warn(&pdev->dev, "%s: Couldn't get ignition gpio",
++		// 	 __func__);
++		return PTR_ERR(ignition_gpio);
++	}
++
++	majorNumber = register_chrdev(0, DEVICE_NAME, &fops);
++	if (majorNumber < 0) {
++		dev_err(&pdev->dev, "failed to register a major number");
++		return majorNumber;
++	}
++	dev_info(&pdev->dev, "registered correctly with major number %d",
++		 majorNumber);
++
++	// Register the device class
++	charClass = class_create(CLASS_NAME);
++	if (IS_ERR(charClass)) { // Check for error and clean up if there is
++		unregister_chrdev(majorNumber, DEVICE_NAME);
++		dev_err(&pdev->dev, "failed to register device class");
++		return PTR_ERR(
++			charClass); // Correct way to return an error on a pointer
++	}
++
++	// Register the device driver
++	charDevice = device_create(charClass, NULL, MKDEV(majorNumber, 0), NULL,
++				   DEVICE_NAME);
++	if (IS_ERR(charDevice)) { // Clean up if there is an error
++		class_destroy(
++			charClass); // Repeated code but the alternative is goto statements
++		unregister_chrdev(majorNumber, DEVICE_NAME);
++		dev_err(&pdev->dev, "failed to create the device");
++		return PTR_ERR(charDevice);
++	}
++
++	gpiod_direction_input(ignition_gpio);
++	prev_pm_power_off = pm_power_off;
++	pm_power_off = &moducop_ignition_do_poweroff;
++	dev_info(&pdev->dev, "pm_power_off function replaced. Was %p",
++		 prev_pm_power_off);
++	return 0;
++}
++
++static int moducop_ignition_remove(struct platform_device *pdev)
++{
++	if (pm_power_off == &moducop_ignition_do_poweroff)
++		pm_power_off = prev_pm_power_off;
++
++	return 0;
++}
++
++static const struct of_device_id of_moducop_ignition_match[] = {
++	{
++		.compatible = "moducop-ignition",
++	},
++	{},
++};
++MODULE_DEVICE_TABLE(of, of_moducop_ignition_match);
++
++static struct platform_driver moducop_ignition_driver = {
++	.probe = moducop_ignition_probe,
++	.remove = moducop_ignition_remove,
++	.driver = {
++		.name = "moducop-ignition",
++		.of_match_table = of_moducop_ignition_match,
++	},
++};
++
++module_platform_driver(moducop_ignition_driver);
++
++MODULE_AUTHOR("Klaus Popp <klaus.popp@ci4rail.com>");
++MODULE_DESCRIPTION("MODUCOP ignition poweroff driver");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:moducop-ignition");
+\ No newline at end of file
+-- 
+2.39.5
+
