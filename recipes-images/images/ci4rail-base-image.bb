@@ -119,5 +119,6 @@ IMAGE_INSTALL += "\
                   ignition-watcher \
                   scheduled-reboot \
                   mender-docker-compose \
+                  ee-inv \
                 "
 
