@@ -115,9 +115,9 @@ IMAGE_INSTALL += "\
                   ttynvt-runner \
                   socketcan-io4edge \
                   socketcan-io4edge-runner \
-                  xdelta3 \
-                  tree \
-                  jq \
                   tailscale \
+                  ignition-watcher \
+                  scheduled-reboot \
+                  mender-docker-compose \
                 "
 
