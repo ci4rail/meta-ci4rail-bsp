@@ -1,3 +1,8 @@
+#
+# This adds a specific wrapup.sh script to the mender-tezi-metadata package
+# to extend the data partition to the full size of the eMMC already during
+# TEZI runtime. 
+#
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI:append = " \

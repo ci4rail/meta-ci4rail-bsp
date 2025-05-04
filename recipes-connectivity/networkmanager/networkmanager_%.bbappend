@@ -1,14 +1,13 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
 
 # Set fixed IP for eth2
+# Don't manage io4edge usb-ethernet interfaces
 SRC_URI += "file://eth2.connection \
             file://usb-netif-unmanaged.conf \
             "
 
 
 # configure networkmanager with modemmanager support
-#PACKAGECONFIG:remove = "ifupdown dnsmasq"
-#PACKAGECONFIG:remove = "ifupdown "
 PACKAGECONFIG:append = " modemmanager ppp wwan wifi"
 RPROVIDES:${PN} = "network-configuration"
 RDEPENDS:${PN} += "bash"
