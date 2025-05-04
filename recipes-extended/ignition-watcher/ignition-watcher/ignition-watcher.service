@@ -1,0 +1,9 @@
+[Unit]
+Description=Starts script observing the ignition pin.
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/watch_ignition_pin.sh
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,35 @@
+#!/bin/sh
+# Set the hostname based on the serial number of the Ci4Rail system
+eeprom_file=/sys/bus/i2c/devices/3-0050/eeprom
+# system inventory is in the second half of the EEPROM
+eeprom_spec=${eeprom_file}@256:256
+
+tdx_serial_number() {
+    if [ ! -f /proc/device-tree/serial-number ]; then
+        serial="recovery-mode"
+    else
+        serial=$(tr -d '\0' </proc/device-tree/serial-number)
+
+        #if serial number is empty we append no-serial-number string
+        if [ -z "${serial}" ] && [ "${serial}" != " "  ]; then
+            serial="no-serial-number"
+        fi
+    fi
+    echo "${serial}"
+}
+
+# run ee-inv to check if the EEPROM is present and has valid content
+if ! ee-inv "${eeprom_spec}" >/dev/null 2>&1; then
+    # Invalid EEPROM content, using toradex som serial number
+    hostname=@@MACHINE@@-$(tdx_serial_number)
+else
+    serial=$(ee-inv "${eeprom_spec}" | jq -r .serial[:8])
+    model=$(ee-inv "${eeprom_spec}" | jq -r .model[5:])
+    hostname="${model}"-"${serial}"
+fi
+
+if [ -f /usr/bin/hostnamectl ]; then
+    /usr/bin/hostnamectl set-hostname @@HOSTNAMECTL_OPT@@ "${hostname}"
+else
+    hostname "${hostname}"
+fi

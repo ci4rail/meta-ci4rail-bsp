@@ -1,5 +1,5 @@
 SUMMARY ?= "Ci4Rail Embedded Linux Base Image"
-DESCRIPTION ?= "Minimal image for the Ci4Rail Hardware"
+DESCRIPTION ?= "Image for the Ci4Rail Hardware CPU01 and CPU01Plus"
 
 LICENSE ?= "MIT"
 
@@ -115,9 +115,10 @@ IMAGE_INSTALL += "\
                   ttynvt-runner \
                   socketcan-io4edge \
                   socketcan-io4edge-runner \
-                  xdelta3 \
-                  tree \
-                  jq \
                   tailscale \
+                  ignition-watcher \
+                  scheduled-reboot \
+                  mender-docker-compose \
+                  ee-inv \
                 "
 
