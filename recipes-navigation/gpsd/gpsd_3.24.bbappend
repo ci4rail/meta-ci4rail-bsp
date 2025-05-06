@@ -1,7 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI += "file://etc_default_gpsd \
             file://gpsd.service \
-            file://gpsd.socket \ 
+            file://gpsd.socket \
             file://gpsd.rules"
 
 do_install:append() {
