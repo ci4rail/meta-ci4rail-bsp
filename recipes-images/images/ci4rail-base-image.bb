@@ -120,5 +120,8 @@ IMAGE_INSTALL += "\
                   scheduled-reboot \
                   mender-docker-compose \
                   ee-inv \
+                  python3-modules \
+                  python3-venv \
+                  python3-pip \
                 "
 
