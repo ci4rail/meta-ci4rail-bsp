@@ -19,37 +19,37 @@ case "$IFACE" in
   usb_ext2)
     IP="192.168.202.10"
     RANGE="192.168.202.1,192.168.202.1"
-    DNSMASQ_PORT="20002"
+    DNSMASQ_PORT="20003"
     ;;
   usb_ext3)
     IP="192.168.203.10"
     RANGE="192.168.203.1,192.168.203.1"
-    DNSMASQ_PORT="20003"
+    DNSMASQ_PORT="20004"
     ;;
   usb_ext4)
     IP="192.168.204.10"
     RANGE="192.168.204.1,192.168.204.1"
-    DNSMASQ_PORT="20004"
+    DNSMASQ_PORT="20005"
     ;;
   usb_ext5)
     IP="192.168.205.10"
     RANGE="192.168.205.1,192.168.205.1"
-    DNSMASQ_PORT="20005"
+    DNSMASQ_PORT="20006"
     ;;
   usb_ext6)
     IP="192.168.206.10"
     RANGE="192.168.206.1,192.168.206.1"
-    DNSMASQ_PORT="20006"
+    DNSMASQ_PORT="20007"
     ;;
   usb_ext7)
     IP="192.168.207.10"
     RANGE="192.168.207.1,192.168.207.1"
-    DNSMASQ_PORT="20007"
+    DNSMASQ_PORT="20008"
     ;;
   usb_ext8)
     IP="192.168.208.10"
     RANGE="192.168.208.1,192.168.208.1"
-    DNSMASQ_PORT="20008"
+    DNSMASQ_PORT="20009"
     ;;
   *)
     echo "Unknown interface: $IFACE" >&2
