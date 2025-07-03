@@ -11,6 +11,7 @@ SRC_URI:append = " file://0001-moducop-specific-dts.patch \
                    file://netext.cfg \
                    file://general.cfg \
                    file://ignition.cfg \
+                   file://sound.cfg \
                 "
 
 
