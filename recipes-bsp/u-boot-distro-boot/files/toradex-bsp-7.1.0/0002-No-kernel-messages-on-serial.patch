@@ -1,0 +1,12 @@
+--- boot.cmd.in.old     2025-07-15 14:09:22.145334802 +0200
++++ boot.cmd.in 2025-07-15 14:09:29.634255567 +0200
+@@ -26,7 +26,7 @@
+ fi
+ 
+ env set appendargs @@APPEND@@
+-env set setupargs console=tty1 console=${console}
++env set setupargs console=tty1 console=${console} loglevel=0
+ 
+ env set bootcmd_unzip ';'
+ if test ${kernel_image} = "fitImage"; then
+ 
