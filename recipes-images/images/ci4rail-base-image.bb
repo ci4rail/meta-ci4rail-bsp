@@ -69,7 +69,7 @@ IMAGE_INSTALL += "\
                   ptpd \
                   tcpdump \         
                   hostapd \
-                  hostapd-example \
+                  access-point \
                   wireless-regdb-static \
                   linux-firmware-ath10k    \
                   linux-firmware-iw416     \
@@ -123,5 +123,6 @@ IMAGE_INSTALL += "\
                   python3-modules \
                   python3-venv \
                   python3-pip \
+                  dbus \
                 "
 
