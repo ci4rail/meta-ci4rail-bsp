@@ -6,4 +6,4 @@ sysctl net.ipv6.conf.all.forwarding=1
 
 iptables -t nat -A POSTROUTING -o end0 -j MASQUERADE
 iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -i uap0 -o end0 -j ACCEPT<
+iptables -A FORWARD -i uap0 -o end0 -j ACCEPT
