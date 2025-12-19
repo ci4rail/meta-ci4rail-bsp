@@ -9,6 +9,7 @@ RDEPENDS:${PN} = "hostapd"
 S = "${WORKDIR}"
 
 SRC_URI = " \
+    file://shared-access-point \
     file://access-point.service \
     file://access-point.network \
     file://access-point.conf \
@@ -24,7 +25,7 @@ do_install() {
     install -m 0644 access-point.network ${D}${sysconfdir}/systemd/network/
     install -m 0644 access-point.service ${D}${systemd_unitdir}/system/
     install -m 0644 access-point.conf ${D}${sysconfdir}/
-    install -m 0644 shared-access-point ${D}${bindir}/
+    install -m 0755 shared-access-point ${D}${bindir}/
     sed -i -e 's,@SBINDIR@,${sbindir},g' -e 's,@SYSCONFDIR@,${sysconfdir},g' ${D}${systemd_unitdir}/system/access-point.service
 }
 
