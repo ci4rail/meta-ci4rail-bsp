@@ -1,0 +1,14 @@
+[Unit]
+Description=Activate Wireless Access Point
+BindsTo=sys-subsystem-net-devices-uap0.device
+After=sys-subsystem-net-devices-uap0.device
+
+[Service]
+Type=forking
+PIDFile=/run/hostapd.pid
+ExecStartPre=/usr/bin/shared-access-point
+ExecStart=@SBINDIR@/hostapd @SYSCONFDIR@/access-point.conf -P /run/hostapd.pid -B
+
+
+[Install]
+WantedBy=network.target
