@@ -124,5 +124,6 @@ IMAGE_INSTALL += "\
                   python3-venv \
                   python3-pip \
                   dbus \
+                  headless-factory-reset \
                 "
 

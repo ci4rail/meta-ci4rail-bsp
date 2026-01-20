@@ -1,0 +1,10 @@
+[Unit]
+Description=Reset-System Service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/reset-data-partition
+RemainAfterExit=yes
+
+[Install]
+WantedBy=headless-reset-system.target
