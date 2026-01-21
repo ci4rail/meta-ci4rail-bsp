@@ -8,6 +8,7 @@ SRC_URI = "file://factory-reset \
            file://headless-reset-system.target \
            file://reset-data-partition \
            file://reset-data-partition.service \
+           file://reset-data-partition-failed.service \
           "
 
 inherit systemd
@@ -21,6 +22,7 @@ do_install() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/headless-reset-system.target ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/reset-data-partition.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/reset-data-partition-failed.service ${D}${systemd_system_unitdir}/
 
     # reset scripts
     install -d ${D}${libexecdir}
@@ -34,6 +36,7 @@ do_install() {
 FILES:${PN} += "\
     ${systemd_system_unitdir}/headless-reset-system.target \
     ${systemd_system_unitdir}/reset-data-partition.service \
+    ${systemd_system_unitdir}/reset-data-partition-failed.service \
     ${libexecdir}/reset-data-partition \
     ${sbindir}/factory-reset \
 "

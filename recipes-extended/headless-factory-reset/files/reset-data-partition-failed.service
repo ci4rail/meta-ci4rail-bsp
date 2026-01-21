@@ -1,0 +1,7 @@
+[Unit]
+Description=Reboot after reset failure
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'journalctl -u reset-data-partition.service > /data/failed-factory-reset.log || true'
+ExecStartPost=/usr/bin/systemctl reboot --force

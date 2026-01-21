@@ -1,10 +1,19 @@
 #!/bin/bash
 
+set -euo pipefail
+
 DATA_DIR="/data"
 EXCLUDE_DIR="mender"
 
+findmnt -t overlay -o TARGET,OPTIONS | grep upperdir=/data/ | awk '{print $1}' | while read -r mountpoint; do
+    echo "Unmounting overlay mount at $mountpoint..."
+    umount -l "$mountpoint"
+    findmnt -rn -o TARGET,SOURCE | awk -v mp="$mountpoint" '$2 ~ "\\[" mp "\\]$" { print $1 }' | xargs -r umount -l
+done
+
 echo "Deleting all data in $DATA_DIR except for $EXCLUDE_DIR..."
 find "$DATA_DIR" -mindepth 1 -maxdepth 1 ! -name "$EXCLUDE_DIR" -exec rm -rf {} \+
+sync
 echo "Data deletion complete."
 
-reboot
+exit 0
