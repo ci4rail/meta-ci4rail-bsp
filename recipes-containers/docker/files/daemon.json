@@ -1,0 +1,7 @@
+{
+    "data-root": "/data/docker",
+    "dns": [
+        "1.1.1.1"
+    ],
+    "log-driver": "journald"
+}
