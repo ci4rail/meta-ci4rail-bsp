@@ -51,6 +51,6 @@ FILES:${PN} += "\
     ${sbindir}/factory-reset \
 "
 
-RDEPENDS:${PN} += "bash"
+RDEPENDS:${PN} += "bash util-linux-findmnt util-linux-umount"
 
-REQUIRED_DISTRO_FEATURES= "systemd"
+REQUIRED_DISTRO_FEATURES = "systemd"

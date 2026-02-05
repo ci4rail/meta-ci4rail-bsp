@@ -12,7 +12,7 @@ if [[ "$confirmation" != "RESET" ]]; then
     exit 1
 fi
 echo "Confirmation received. System reset to factory condition initiated..."
-echo "During the reset process, the system become unresponsive for a short period."
+echo "During the reset process, the system will become unresponsive for a short period."
 sleep 5
 
 echo "Stopping all services by entering headless-reset-system mode..."

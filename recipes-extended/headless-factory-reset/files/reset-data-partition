@@ -5,6 +5,23 @@ set -euo pipefail
 DATA_DIR="/data"
 EXCLUDES=( "/data/mender" )
 
+if [[ ! -d "$DATA_DIR" ]]; then
+    echo "Data directory $DATA_DIR does not exist. Exiting." >&2
+    exit 1
+fi
+
+if ! mountpoint -q "$DATA_DIR"; then
+    echo "Data directory $DATA_DIR is not mounted. Exiting." >&2
+    exit 1
+fi
+
+for e in "${EXCLUDES[@]}"; do
+    if [[ ! -e "$e" ]]; then
+        echo "Excluded directory $e does not exist. Exiting." >&2
+        exit 1
+    fi
+done
+
 # respect excluded paths (must be done before unmounting overlays to respect possible changes to exclude paths)
 EXCLUDE_CONF="/etc/factory-reset-excludes.conf"
 if [[ -f "$EXCLUDE_CONF" ]]; then
@@ -13,7 +30,7 @@ if [[ -f "$EXCLUDE_CONF" ]]; then
         if [[ -z "$path" || "$path" =~ ^# ]]; then
             continue
         fi
-	# check if path exists
+        # check if path exists
         if [[ -e "$path" ]]; then
             EXCLUDES+=( "$path" )
         fi
