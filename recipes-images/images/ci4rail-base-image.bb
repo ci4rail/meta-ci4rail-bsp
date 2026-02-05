@@ -123,5 +123,7 @@ IMAGE_INSTALL += "\
                   python3-modules \
                   python3-venv \
                   python3-pip \
+                  openscap \
+                  scap-security-guide \
                 "
 
