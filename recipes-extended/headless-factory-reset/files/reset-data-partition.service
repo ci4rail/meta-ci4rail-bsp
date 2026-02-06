@@ -1,0 +1,12 @@
+[Unit]
+Description=Reset-System Service
+OnFailure=reset-data-partition-failed.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/reset-data-partition
+ExecStartPost=/usr/bin/systemctl reboot --force
+RemainAfterExit=yes
+
+[Install]
+WantedBy=headless-reset-system.target

@@ -1,0 +1,6 @@
+[Unit]
+Description=Headless Reset Mode
+Requires=rescue.target
+After=rescue.target
+DefaultDependencies=no
+AllowIsolate=yes

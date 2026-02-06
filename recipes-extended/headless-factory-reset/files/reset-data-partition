@@ -1,0 +1,80 @@
+#!/bin/bash
+
+set -euo pipefail
+
+DATA_DIR="/data"
+EXCLUDES=( "/data/mender" )
+
+if [[ ! -d "$DATA_DIR" ]]; then
+    echo "Data directory $DATA_DIR does not exist. Exiting." >&2
+    exit 1
+fi
+
+if ! mountpoint -q "$DATA_DIR"; then
+    echo "Data directory $DATA_DIR is not mounted. Exiting." >&2
+    exit 1
+fi
+
+for e in "${EXCLUDES[@]}"; do
+    if [[ ! -e "$e" ]]; then
+        echo "Excluded directory $e does not exist. Exiting." >&2
+        exit 1
+    fi
+done
+
+# respect excluded paths (must be done before unmounting overlays to respect possible changes to exclude paths)
+EXCLUDE_CONF="/etc/factory-reset-excludes.conf"
+if [[ -f "$EXCLUDE_CONF" ]]; then
+    while IFS= read -r path; do
+        # Skip empty lines and comments
+        if [[ -z "$path" || "$path" =~ ^# ]]; then
+            continue
+        fi
+        # check if path exists
+        if [[ -e "$path" ]]; then
+            EXCLUDES+=( "$path" )
+        fi
+    done < "$EXCLUDE_CONF"
+fi
+
+# unmount overlays to avoid issues during deletion
+if findmnt -rn -t overlay -o TARGET,OPTIONS | grep upperdir=/data/ | awk '{print $1}' | while read -r mountpoint; do
+   echo "Unmounting overlay mount at $mountpoint..."
+   umount -l "$mountpoint"
+   findmnt -rn -o TARGET,SOURCE | awk -v mp="$mountpoint" '$2 ~ "\\[" mp "\\]$" { print $1 }' | xargs -r umount -l
+done; then :; fi
+
+EXCLUDE_SUB=()
+# create list with subpaths of the excludes
+for e in "${EXCLUDES[@]}"; do
+    while read -r path; do
+        EXCLUDE_SUB+=( "$path" )
+    done < <(find "$e" -mindepth 0)
+done
+
+
+EXCLUDE_FULL=()
+# create a list with subpaths and parents of the excludes
+for p in "${EXCLUDE_SUB[@]}"; do
+    dir="$p"
+    while [[ "$dir" != "$DATA_DIR" && "$dir" != "/" ]]; do
+        EXCLUDE_FULL+=( "$dir" )
+        dir=$(dirname "$dir")
+    done
+done
+
+EXCLUDE_EXPR=()
+# build the expression
+for p in "${EXCLUDE_FULL[@]}"; do
+    EXCLUDE_EXPR+=( -path "$p" -o )
+done
+
+# remove last "-o"
+unset 'EXCLUDE_EXPR[-1]'
+
+echo "Deleting all data in $DATA_DIR except for ${EXCLUDES[*]}..."
+find "$DATA_DIR" -mindepth 1 ! \( "${EXCLUDE_EXPR[@]}" \) -exec rm -rf {} +
+sync
+echo "Data deletion complete."
+
+exit 0

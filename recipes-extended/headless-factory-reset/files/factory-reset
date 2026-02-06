@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -euo pipefail
+
+echo "===================="
+echo "SYSTEM FACTORY RESET"
+echo "===================="
+echo "If you continue, all data on this system will be permanently deleted and the factory settings are restored."
+read -p "Type 'RESET' to confirm: " confirmation
+if [[ "$confirmation" != "RESET" ]]; then
+    echo "Confirmation not received. Exiting."
+    exit 1
+fi
+echo "Confirmation received. System reset to factory condition initiated..."
+echo "During the reset process, the system will become unresponsive for a short period."
+sleep 5
+
+echo "Stopping all services by entering headless-reset-system mode..."
+systemctl isolate headless-reset-system.target
