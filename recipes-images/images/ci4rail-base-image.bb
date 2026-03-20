@@ -70,6 +70,7 @@ IMAGE_INSTALL += "\
                   tcpdump \         
                   hostapd \
                   access-point \
+                  antenna-config \
                   wireless-regdb-static \
                   linux-firmware-ath10k    \
                   linux-firmware-iw416     \
