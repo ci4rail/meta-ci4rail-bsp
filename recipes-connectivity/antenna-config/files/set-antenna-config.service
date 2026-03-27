@@ -1,7 +1,7 @@
 [Unit]
 Description=Set WiFi antenna configuration
-After=network-pre.target
-Before=network.target
+After=sys-subsystem-net-devices-uap0.device
+After=sys-subsystem-net-devices-mlan0.device
 
 [Service]
 Type=oneshot
