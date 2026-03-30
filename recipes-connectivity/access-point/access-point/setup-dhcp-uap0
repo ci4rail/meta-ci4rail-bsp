@@ -1,0 +1,5 @@
+#!/bin/sh
+
+/usr/bin/nmcli dev set uap0 managed no
+/usr/bin/ln -sf /etc/access-point.network.active /etc/systemd/network/access-point.network
+/bin/systemctl restart systemd-networkd
