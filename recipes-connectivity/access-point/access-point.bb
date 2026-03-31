@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-RDEPENDS:${PN} = "hostapd networkmanager"
+RDEPENDS:${PN} = "hostapd networkmanager systemd-networkd"
 
 S = "${WORKDIR}"
 
@@ -22,7 +22,7 @@ SYSTEMD_SERVICE:${PN} = "access-point.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "disable"
 
 do_install() {
-    install -d ${D}${systemd_unitdir}/system/ ${D}${sysconfdir}/ ${D}${sysconfdir}/systemd/network/ ${D}${bindir}
+    install -d ${D}${systemd_unitdir}/system/ ${D}${sysconfdir}/ ${D}${bindir}
     install -m 0644 access-point.network.active ${D}${sysconfdir}/
     install -m 0644 access-point.service ${D}${systemd_unitdir}/system/
     install -m 0644 access-point.conf ${D}${sysconfdir}/

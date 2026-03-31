@@ -2,6 +2,7 @@
 Description=Activate Wireless Access Point
 BindsTo=sys-subsystem-net-devices-uap0.device
 After=sys-subsystem-net-devices-uap0.device
+After=systemd-networkd.service
 After=NetworkManager.service
 
 [Service]
