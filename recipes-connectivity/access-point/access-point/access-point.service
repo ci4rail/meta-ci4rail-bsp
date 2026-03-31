@@ -2,6 +2,7 @@
 Description=Activate Wireless Access Point
 BindsTo=sys-subsystem-net-devices-uap0.device
 After=sys-subsystem-net-devices-uap0.device
+After=NetworkManager.service
 
 [Service]
 Type=forking
@@ -9,7 +10,7 @@ PIDFile=/run/hostapd.pid
 ExecStartPre=/usr/bin/shared-access-point
 ExecStartPre=/usr/bin/setup-dhcp-uap0
 ExecStart=@SBINDIR@/hostapd @SYSCONFDIR@/access-point.conf -P /run/hostapd.pid -B
-ExecStopPost=/usr/bin/rm /etc/systemd/network/access-point.network
+ExecStopPost=/usr/bin/rm -f /etc/systemd/network/access-point.network
 
 
 [Install]

@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-RDEPENDS:${PN} = "hostapd"
+RDEPENDS:${PN} = "hostapd networkmanager"
 
 S = "${WORKDIR}"
 
@@ -33,7 +33,7 @@ do_install() {
 
 FILES:${PN} += " \
     ${systemd_unitdir}/system/* \
-    ${sysconfdir}/systemd/network/access-point.network.active \
+    ${sysconfdir}/access-point.network.active \
     ${sysconfdir}/access-point.conf \
     ${bindir}/shared-access-point \
     ${bindir}/setup-dhcp-uap0 \
