@@ -1,0 +1,27 @@
+# SIMCom SIM8230 default USB composition:
+#   1e0e:9071 = DIAG_NMEA_AT_RMNET_ADB
+#
+# Help ModemManager classify the exposed ports so it can use the QMI/RMNET
+# data path instead of falling back to PPP on the AT port.
+
+ACTION!="add|change|move|bind", GOTO="mm_simcom_8230_port_types_end"
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", GOTO="mm_simcom_8230_port_types"
+GOTO="mm_simcom_8230_port_types_end"
+
+LABEL="mm_simcom_8230_port_types"
+SUBSYSTEMS=="usb", ATTRS{bInterfaceNumber}=="?*", ENV{.MM_USBIFNUM}="$attr{bInterfaceNumber}"
+
+# ttyUSB0 = DIAG
+ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="00", SUBSYSTEM=="tty", ENV{ID_MM_PORT_TYPE_QCDM}="1", ENV{ID_MM_DEVICE_PROCESS}="1"
+
+# ttyUSB1 = NMEA/GPS
+ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="01", SUBSYSTEM=="tty", ENV{ID_MM_PORT_TYPE_GPS}="1", ENV{ID_MM_DEVICE_PROCESS}="1"
+
+# ttyUSB2 = primary AT control
+ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="02", SUBSYSTEM=="tty", ENV{ID_MM_PORT_TYPE_AT_PRIMARY}="1", ENV{ID_MM_DEVICE_PROCESS}="1"
+
+# cdc-wdm0 + wwan/RMNET data interface
+ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="03", SUBSYSTEM=="usbmisc", KERNEL=="cdc-wdm*", ENV{ID_MM_PORT_TYPE_QMI}="1", ENV{ID_MM_DEVICE_PROCESS}="1"
+ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="03", SUBSYSTEM=="net", ENV{ID_MM_DEVICE_PROCESS}="1"
+
+LABEL="mm_simcom_8230_port_types_end"
