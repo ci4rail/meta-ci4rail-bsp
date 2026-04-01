@@ -21,6 +21,12 @@ ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="01", SUBS
 ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="02", SUBSYSTEM=="tty", ENV{ID_MM_PORT_TYPE_AT_PRIMARY}="1", ENV{ID_MM_DEVICE_PROCESS}="1"
 
 # cdc-wdm0 + wwan/RMNET data interface
+# match only the SIMCom modem with USB VID:PID 1e0e:9071
+# only for USB interface number 03
+# only for devices in SUBSYSTEM=="usbmisc" whose kernel name looks like cdc-wdm*
+# then tag that device with ID_MM_PORT_TYPE_QMI=1
+# That ID_MM_PORT_TYPE_QMI=1 is the important part: it tells ModemManager “this cdc-wdm node is the QMI control port”. Without that, MM may treat the modem as generic AT-only hardware or miss the QMI control channel.
+# ID_MM_DEVICE_PROCESS=1 tells ModemManager “this device belongs to a modem you should actually inspect”. It prevents the port from being ignored by MM’s udev-based discovery.
 ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="03", SUBSYSTEM=="usbmisc", KERNEL=="cdc-wdm*", ENV{ID_MM_PORT_TYPE_QMI}="1", ENV{ID_MM_DEVICE_PROCESS}="1"
 ATTRS{idVendor}=="1e0e", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="03", SUBSYSTEM=="net", ENV{ID_MM_DEVICE_PROCESS}="1"
 
