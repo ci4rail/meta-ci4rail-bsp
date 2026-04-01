@@ -4,7 +4,7 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
-RDEPENDS:${PN} = "hostapd networkmanager systemd-networkd"
+RDEPENDS:${PN} = "hostapd networkmanager systemd"
 
 S = "${WORKDIR}"
 
