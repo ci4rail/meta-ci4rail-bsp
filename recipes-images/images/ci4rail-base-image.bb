@@ -126,5 +126,7 @@ IMAGE_INSTALL += "\
                   python3-pip \
                   dbus \
                   headless-factory-reset \
+                  net-snmp \
+                  net-snmp-server \
                 "
 
