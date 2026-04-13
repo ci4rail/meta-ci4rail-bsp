@@ -1,3 +1,6 @@
+# we don't need timesyncd, we have chrony
+PACKAGECONFIG:remove = "timesyncd"
+
 PACKAGE_WRITE_DEPS:append = " ${@bb.utils.contains('DISTRO_FEATURES','systemd','systemd-systemctl-native','',d)}"
 pkg_postinst:${PN}:append () {
 	if ${@bb.utils.contains('DISTRO_FEATURES','systemd','true','false',d)}; then

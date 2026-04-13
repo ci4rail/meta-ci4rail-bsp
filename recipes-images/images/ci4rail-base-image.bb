@@ -91,6 +91,7 @@ IMAGE_INSTALL += "\
                   e2fsprogs-tune2fs \
                   ethtool \
                   chrony \
+                  chronyc \
                   gpsd \
                   grep \
                   lsof \
