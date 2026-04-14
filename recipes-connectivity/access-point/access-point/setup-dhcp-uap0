@@ -2,6 +2,7 @@
 set -e
 
 /usr/bin/nmcli dev set uap0 managed no
+sleep 1
 /usr/bin/ln -sf /etc/access-point.network.active /etc/systemd/network/access-point.network
 /usr/bin/networkctl reload
 /usr/bin/networkctl reconfigure uap0
