@@ -3,6 +3,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${BPN}:"
 # Set fixed IP for eth2
 # Don't manage io4edge usb-ethernet interfaces
 SRC_URI += "file://eth2.connection \
+            file://20-chrony-dhcp \
             file://usb-netif-unmanaged.conf \
             "
 
@@ -16,5 +17,6 @@ do_install:append() {
     install -m 0600 ${WORKDIR}/eth2.connection ${D}${sysconfdir}/NetworkManager/system-connections/
     install -d ${D}${sysconfdir}/NetworkManager/conf.d/
     install -m 0600 ${WORKDIR}/usb-netif-unmanaged.conf  ${D}${sysconfdir}/NetworkManager/conf.d/
+    install -d ${D}${nonarch_libdir}/NetworkManager/dispatcher.d/
+    install -m 0755 ${WORKDIR}/20-chrony-dhcp ${D}${nonarch_libdir}/NetworkManager/dispatcher.d/
 }
-

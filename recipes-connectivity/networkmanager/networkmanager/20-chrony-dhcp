@@ -1,0 +1,65 @@
+#!/bin/sh
+
+set -eu
+
+iface="${1:-}"
+action="${2:-}"
+runtime_dir="/run/chrony-dhcp"
+sources_file="${runtime_dir}/${iface}.sources"
+
+reload_sources() {
+    if command -v chronyc >/dev/null 2>&1; then
+        chronyc reload sources >/dev/null 2>&1 || true
+    fi
+}
+
+remove_sources() {
+    rm -f "${sources_file}"
+    reload_sources
+}
+
+case "${action}" in
+    down|pre-down)
+        remove_sources
+        exit 0
+        ;;
+    up|dhcp4-change|reapply)
+        ;;
+    *)
+        exit 0
+        ;;
+esac
+
+if [ -z "${iface}" ]; then
+    exit 0
+fi
+
+ntp_servers="${DHCP4_NTP_SERVERS:-}"
+
+if [ -z "${ntp_servers}" ]; then
+    while IFS='=' read -r name value; do
+        case "${name}" in
+            DHCP4_*NTP*)
+                ntp_servers="${value}"
+                break
+                ;;
+        esac
+    done <<EOF
+$(env)
+EOF
+fi
+
+if [ -z "${ntp_servers}" ]; then
+    remove_sources
+    exit 0
+fi
+
+mkdir -p "${runtime_dir}"
+
+{
+    for server in ${ntp_servers}; do
+        printf 'server %s iburst\n' "${server}"
+    done
+} > "${sources_file}"
+
+reload_sources

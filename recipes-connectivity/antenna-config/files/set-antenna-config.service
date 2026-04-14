@@ -1,5 +1,7 @@
 [Unit]
 Description=Set WiFi antenna configuration
+Requires=sys-subsystem-net-devices-mlan0.device
+Requires=sys-subsystem-net-devices-uap0.device
 After=sys-subsystem-net-devices-mlan0.device
 After=sys-subsystem-net-devices-uap0.device
 Before=access-point.service
