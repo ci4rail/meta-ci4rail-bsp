@@ -1,0 +1,11 @@
+--- boot.cmd.in
++++ boot.cmd.in
+@@ -59,7 +59,7 @@
+ fi
+ 
+ env set appendargs @@APPEND@@
+-env set setupargs console=tty1 console=${console}
++env set setupargs console=tty1 console=${console} loglevel=0
+ 
+ env set bootcmd_unzip ';'
+ if test "${kernel_image}" = "fitImage"; then

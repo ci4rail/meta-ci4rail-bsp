@@ -73,8 +73,6 @@ IMAGE_INSTALL += "\
                   antenna-config \
                   wireless-regdb-static \
                   linux-firmware-ath10k    \
-                  linux-firmware-iw416     \
-                  linux-firmware-nxp89xx   \
                   linux-firmware-sd8686    \
                   linux-firmware-sd8688    \
                   linux-firmware-sd8787    \
