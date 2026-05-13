@@ -129,5 +129,6 @@ IMAGE_INSTALL += "\
                   headless-factory-reset \
                   net-snmp \
                   net-snmp-server \
+                  net-snmp-dev \
                 "
 
