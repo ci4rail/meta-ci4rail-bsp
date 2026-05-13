@@ -1,0 +1,16 @@
+[Unit]
+Description=Prepare persistent Net-SNMP directory
+Before=snmpd.service
+After=local-fs.target
+Requires=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+
+ExecStart=/bin/mkdir -p /data/net-snmp
+ExecStart=/bin/rm -rf /var/lib/net-snmp
+ExecStart=/bin/ln -s /data/net-snmp /var/lib/net-snmp
+
+[Install]
+WantedBy=multi-user.target
