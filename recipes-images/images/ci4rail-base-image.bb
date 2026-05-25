@@ -73,8 +73,9 @@ IMAGE_INSTALL += "\
                   antenna-config \
                   wireless-regdb-static \
                   linux-firmware-ath10k    \
-                  linux-firmware-iw416     \
-                  linux-firmware-nxp89xx   \
+                  linux-firmware-nxp8987-sdio \
+                  linux-firmware-nxp8997-sdio \
+                  linux-firmware-nxpiw416-sdio \
                   linux-firmware-sd8686    \
                   linux-firmware-sd8688    \
                   linux-firmware-sd8787    \
@@ -131,4 +132,3 @@ IMAGE_INSTALL += "\
                   net-snmp-server \
                   net-snmp-dev \
                 "
-
