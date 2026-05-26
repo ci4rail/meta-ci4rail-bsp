@@ -4,6 +4,7 @@ DESCRIPTION ?= "Image for the Ci4Rail Hardware CPU01 and CPU01Plus"
 LICENSE ?= "MIT"
 
 inherit core-image
+inherit mender-artifact-bootfit-rootfs
 
 #Prefix to the resulting deployable tarball name
 BASENAME ?= "Base-Image"
@@ -122,6 +123,7 @@ IMAGE_INSTALL += "\
                   ignition-watcher \
                   scheduled-reboot \
                   mender-docker-compose \
+                  mender-bootfit-rootfs \
                   ee-inv \
                   python3-modules \
                   python3-venv \

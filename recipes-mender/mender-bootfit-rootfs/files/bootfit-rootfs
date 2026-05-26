@@ -1,0 +1,316 @@
+#!/bin/sh
+
+set -eu
+
+STATE="$1"
+FILES="$2"
+CONFIG_FILE="${MENDER_BOOTFIT_ROOTFS_CONF:-/etc/mender/bootfit-rootfs.conf}"
+
+PRINTENV="${PRINTENV:-fw_printenv}"
+SETENV="${SETENV:-fw_setenv}"
+MENDER_FLASH="${MENDER_FLASH:-mender-flash}"
+BOOTFIT_MOUNTPOINT="${FILES}/tmp/bootfit-mount"
+BOOTFIT_MOUNTED=0
+
+fail() {
+    echo "bootfit-rootfs: $*" >&2
+    exit 1
+}
+
+cleanup_bootfit_mount() {
+    if test "${BOOTFIT_MOUNTED}" = "1"; then
+        sync || true
+        umount "${BOOTFIT_MOUNTPOINT}" || true
+        BOOTFIT_MOUNTED=0
+    fi
+}
+
+trap cleanup_bootfit_mount EXIT INT TERM
+
+load_config() {
+    test -r "${CONFIG_FILE}" || fail "configuration is missing: ${CONFIG_FILE}"
+    # shellcheck source=/dev/null
+    . "${CONFIG_FILE}"
+
+    for name in \
+        BOOTFIT_PART ROOTFS_PART_A ROOTFS_PART_B \
+        BOOT_SLOT_ENV SLOT_A_VALUE SLOT_B_VALUE UPGRADE_ENV BOOTCOUNT_ENV \
+        BOOTFIT_PAYLOAD_PATTERN BOOTFIT_TARGET_FILE_A BOOTFIT_TARGET_FILE_B \
+        ROOTFS_PAYLOAD_PATTERN \
+        REQUIRE_DM_VERITY_ROOT CHECK_CMDLINE_ROOT
+    do
+        eval "value=\${${name}:-}"
+        test -n "${value}" || fail "${name} is not configured"
+    done
+    for target_file in "${BOOTFIT_TARGET_FILE_A}" "${BOOTFIT_TARGET_FILE_B}"; do
+        case "${target_file}" in
+            /*) ;;
+            *) fail "boot FIT target files must be absolute paths" ;;
+        esac
+    done
+
+    command -v "${PRINTENV}" >/dev/null 2>&1 ||
+        fail "required command not found: ${PRINTENV}"
+    command -v "${SETENV}" >/dev/null 2>&1 ||
+        fail "required command not found: ${SETENV}"
+
+    for device in \
+        "${BOOTFIT_PART}" "${ROOTFS_PART_A}" "${ROOTFS_PART_B}"
+    do
+        test -b "${device}" || fail "configured target is not a block device: ${device}"
+    done
+}
+
+env_value() {
+    value="$("${PRINTENV}" "$1" 2>/dev/null || true)"
+    value="${value#*=}"
+    printf '%s\n' "${value}"
+}
+
+save_original_slot() {
+    slot="$1"
+    mkdir -p "${FILES}/tmp"
+    printf '%s\n' "${slot}" > "${FILES}/tmp/original-slot.tmp"
+    sync
+    mv "${FILES}/tmp/original-slot.tmp" "${FILES}/tmp/original-slot"
+    sync
+}
+
+select_slots() {
+    active_slot="$(env_value "${BOOT_SLOT_ENV}")"
+    case "${active_slot}" in
+        "${SLOT_A_VALUE}")
+            active_rootfs="${ROOTFS_PART_A}"
+            passive_slot="${SLOT_B_VALUE}"
+            passive_bootfit_file="${BOOTFIT_TARGET_FILE_B}"
+            passive_rootfs="${ROOTFS_PART_B}"
+            ;;
+        "${SLOT_B_VALUE}")
+            active_rootfs="${ROOTFS_PART_B}"
+            passive_slot="${SLOT_A_VALUE}"
+            passive_bootfit_file="${BOOTFIT_TARGET_FILE_A}"
+            passive_rootfs="${ROOTFS_PART_A}"
+            ;;
+        *)
+            fail "invalid ${BOOT_SLOT_ENV} value '${active_slot}'"
+            ;;
+    esac
+}
+
+resolve_kernel_root() {
+    root_spec=""
+    for argument in $(cat /proc/cmdline); do
+        case "${argument}" in
+            root=*)
+                root_spec="${argument#root=}"
+                break
+                ;;
+        esac
+    done
+
+    case "${root_spec}" in
+        /dev/*)
+            readlink -f "${root_spec}" 2>/dev/null || true
+            ;;
+        UUID=*|LABEL=*|PARTUUID=*|PARTLABEL=*)
+            findfs "${root_spec}" 2>/dev/null || true
+            ;;
+        *)
+            printf '%s\n' ""
+            ;;
+    esac
+}
+
+check_active_root() {
+    test "${CHECK_CMDLINE_ROOT}" = "1" || return 0
+    expected="$(readlink -f "${active_rootfs}")"
+    actual="$(resolve_kernel_root)"
+    test -n "${actual}" ||
+        fail "cannot resolve root= from /proc/cmdline while active-slot checking is enabled"
+    actual="$(readlink -f "${actual}")"
+    test "${actual}" = "${expected}" ||
+        fail "booted root ${actual} does not match active slot rootfs ${expected}"
+}
+
+write_rootfs_payload() {
+    input="$1"
+    size="$2"
+    target="$3"
+
+    if command -v "${MENDER_FLASH}" >/dev/null 2>&1; then
+        "${MENDER_FLASH}" --input-size "${size}" --input "${input}" --output "${target}"
+    else
+        cat "${input}" > "${target}"
+        sync
+    fi
+}
+
+write_bootfit_payload() {
+    input="$1"
+    target="${BOOTFIT_MOUNTPOINT}${passive_bootfit_file}"
+    temporary="${target}.mender-new"
+
+    mkdir -p "${BOOTFIT_MOUNTPOINT}"
+    mount -t ext4 "${BOOTFIT_PART}" "${BOOTFIT_MOUNTPOINT}"
+    BOOTFIT_MOUNTED=1
+
+    rm -f "${temporary}"
+    cat "${input}" > "${temporary}"
+    chmod 0644 "${temporary}"
+    sync
+    mv -f "${temporary}" "${target}"
+    sync
+    cleanup_bootfit_mount
+}
+
+stream_pair_to_inactive_slot() {
+    mkdir -p "${FILES}/tmp"
+    rm -f "${FILES}/tmp/received-bootfit" "${FILES}/tmp/received-rootfs"
+
+    while line="$(cat stream-next)" && test -n "${line}"; do
+        input="${line% *}"
+        size="${line##* }"
+        name="$(basename "${input}")"
+
+        case "${name}" in
+            ${BOOTFIT_PAYLOAD_PATTERN})
+                test ! -e "${FILES}/tmp/received-bootfit" ||
+                    fail "payload contains more than one boot FIT"
+                write_bootfit_payload "${input}"
+                : > "${FILES}/tmp/received-bootfit"
+                ;;
+            ${ROOTFS_PAYLOAD_PATTERN})
+                test ! -e "${FILES}/tmp/received-rootfs" ||
+                    fail "payload contains more than one rootfs image"
+                write_rootfs_payload "${input}" "${size}" "${passive_rootfs}"
+                : > "${FILES}/tmp/received-rootfs"
+                ;;
+            *)
+                fail "unexpected payload file '${name}'"
+                ;;
+        esac
+    done
+
+    test -e "${FILES}/tmp/received-bootfit" ||
+        fail "payload does not contain a boot FIT matching ${BOOTFIT_PAYLOAD_PATTERN}"
+    test -e "${FILES}/tmp/received-rootfs" ||
+        fail "payload does not contain a rootfs matching ${ROOTFS_PAYLOAD_PATTERN}"
+}
+
+activate_passive_slot() {
+    save_original_slot "${active_slot}"
+    "${SETENV}" -s - <<EOF
+${BOOT_SLOT_ENV}=${passive_slot}
+${UPGRADE_ENV}=1
+${BOOTCOUNT_ENV}=0
+EOF
+}
+
+restore_original_slot() {
+    test -r "${FILES}/tmp/original-slot" || return 0
+    original_slot="$(cat "${FILES}/tmp/original-slot")"
+    "${SETENV}" -s - <<EOF
+${BOOT_SLOT_ENV}=${original_slot}
+${UPGRADE_ENV}=0
+${BOOTCOUNT_ENV}=0
+EOF
+}
+
+verify_dm_verity_root() {
+    test "${REQUIRE_DM_VERITY_ROOT}" = "1" || return 0
+    root_source="$(findmnt -n -o SOURCE / 2>/dev/null || true)"
+    case "${root_source}" in
+        /dev/mapper/rootfs|/dev/dm-*)
+            ;;
+        *)
+            fail "root filesystem is '${root_source}', not a dm-verity mapper device"
+            ;;
+    esac
+}
+
+case "${STATE}" in
+    ProvidePayloadFileSizes)
+        echo "Yes"
+        ;;
+
+    Download)
+        fail "this module supports DownloadWithFileSizes only"
+        ;;
+
+    DownloadWithFileSizes)
+        load_config
+        select_slots
+        check_active_root
+        test "$(env_value "${UPGRADE_ENV}")" = "0" ||
+            fail "${UPGRADE_ENV} is already set before download"
+        stream_pair_to_inactive_slot
+        ;;
+
+    ArtifactInstall)
+        load_config
+        select_slots
+        check_active_root
+        test -e "${FILES}/tmp/received-bootfit" &&
+            test -e "${FILES}/tmp/received-rootfs" ||
+            fail "both inactive-slot images were not downloaded successfully"
+        test "$(env_value "${UPGRADE_ENV}")" = "0" ||
+            fail "${UPGRADE_ENV} is already set before activation"
+        activate_passive_slot
+        ;;
+
+    NeedsArtifactReboot)
+        echo "Automatic"
+        ;;
+
+    SupportsRollback)
+        echo "Yes"
+        ;;
+
+    ArtifactVerifyReboot)
+        load_config
+        target_slot="$(cat "${FILES}/tmp/original-slot")"
+        case "${target_slot}" in
+            "${SLOT_A_VALUE}") target_slot="${SLOT_B_VALUE}" ;;
+            "${SLOT_B_VALUE}") target_slot="${SLOT_A_VALUE}" ;;
+            *) fail "cannot determine activated slot" ;;
+        esac
+        test "$(env_value "${BOOT_SLOT_ENV}")" = "${target_slot}" ||
+            fail "new boot did not select the updated slot"
+        test "$(env_value "${UPGRADE_ENV}")" = "1" ||
+            fail "${UPGRADE_ENV} is not set after the update boot"
+        verify_dm_verity_root
+        ;;
+
+    ArtifactCommit)
+        load_config
+        verify_dm_verity_root
+        test "$(env_value "${UPGRADE_ENV}")" = "1" ||
+            fail "${UPGRADE_ENV} is not set while committing"
+        "${SETENV}" "${UPGRADE_ENV}" 0
+        ;;
+
+    ArtifactRollback)
+        load_config
+        restore_original_slot
+        ;;
+
+    ArtifactVerifyRollbackReboot)
+        load_config
+        test -r "${FILES}/tmp/original-slot" ||
+            fail "original slot is unavailable during rollback verification"
+        test "$(env_value "${BOOT_SLOT_ENV}")" = "$(cat "${FILES}/tmp/original-slot")" ||
+            fail "rollback did not restore the previous boot slot"
+        test "$(env_value "${UPGRADE_ENV}")" = "0" ||
+            fail "${UPGRADE_ENV} remains set after rollback"
+        ;;
+
+    ArtifactReboot|ArtifactRollbackReboot|ArtifactFailure|Cleanup)
+        :
+        ;;
+
+    *)
+        fail "unsupported state '${STATE}'"
+        ;;
+esac
+
+exit 0
