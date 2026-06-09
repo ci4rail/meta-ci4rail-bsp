@@ -9,7 +9,7 @@ Wants=docker.service
 
 [Service]
 Type=simple
-ExecStart=/etc/core-api-server --server.address 127.0.0.1:8090 --log.level info
+ExecStart=/usr/bin/core-api-server --server.address 127.0.0.1:8090 --log.level info
 
 Restart=on-abort
 
