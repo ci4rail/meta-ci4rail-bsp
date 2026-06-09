@@ -7,7 +7,6 @@ LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=2b42edef8fa55315f34f2370b4715c
 
 COMPATIBLE_HOST = "(aarch64).*-linux"
 
-# Set SRC_URI subdir to ${P} so that files are unpacked into ${S}
 SRC_URI:aarch64 = "https://github.com/ci4rail/moducop-core-api-server/releases/download/v${PV}/core-api-server-v${PV}-linux-arm64.tar.gz;name=arm64"
 SRC_URI:append = " file://${BPN}.service"
 
