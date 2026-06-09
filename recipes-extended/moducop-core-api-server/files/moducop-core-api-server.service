@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: 2026 Ci4Rail GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[Unit]
+Description=Moducop Core API Server
+After=docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+ExecStart=/etc/core-api-server --server.address 127.0.0.1:8090 --log.level info
+
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
