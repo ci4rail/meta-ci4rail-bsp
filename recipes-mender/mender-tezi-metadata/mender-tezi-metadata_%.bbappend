@@ -12,6 +12,9 @@ SRC_URI:append = " \
 do_deploy:append() {
     sed -e "s|@MENDER_STORAGE_DEVICE@|${MENDER_STORAGE_DEVICE}|g" \
         -e "s|@MENDER_DATA_PART_NUMBER@|${MENDER_DATA_PART_NUMBER}|g" \
+        -e "s|@MENDER_UBOOT_ENV_STORAGE_DEVICE_OFFSET_1@|${MENDER_UBOOT_ENV_STORAGE_DEVICE_OFFSET_1}|g" \
+        -e "s|@MENDER_UBOOT_ENV_STORAGE_DEVICE_OFFSET_2@|${MENDER_UBOOT_ENV_STORAGE_DEVICE_OFFSET_2}|g" \
+        -e "s|@BOOTENV_SIZE@|${BOOTENV_SIZE}|g" \
             ${WORKDIR}/wrapup.sh.in > ${DEPLOYDIR}/mender-tezi-metadata/wrapup.sh
     chmod 755 ${DEPLOYDIR}/mender-tezi-metadata/wrapup.sh
 }

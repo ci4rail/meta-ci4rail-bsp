@@ -3,6 +3,27 @@
 DEVICE="@MENDER_STORAGE_DEVICE@"
 PART_NUM="@MENDER_DATA_PART_NUMBER@"
 PARTITION="${DEVICE}p${PART_NUM}"
+UBOOT_ENV_OFFSET_1="@MENDER_UBOOT_ENV_STORAGE_DEVICE_OFFSET_1@"
+UBOOT_ENV_OFFSET_2="@MENDER_UBOOT_ENV_STORAGE_DEVICE_OFFSET_2@"
+UBOOT_ENV_SIZE="@BOOTENV_SIZE@"
+
+clear_u_boot_env() {
+    offset="$1"
+
+    if [ -z "$offset" ] || [ -z "$UBOOT_ENV_SIZE" ]; then
+        echo "[ERROR] Missing U-Boot environment offset or size"
+        exit 1
+    fi
+
+    offset_bytes=$((offset))
+    size_bytes=$((UBOOT_ENV_SIZE))
+
+    echo "[INFO] Clearing U-Boot environment at ${DEVICE}, offset ${offset_bytes}, size ${size_bytes}..."
+    dd if=/dev/zero of="$DEVICE" bs=1 seek="$offset_bytes" count="$size_bytes" conv=notrunc
+}
+
+clear_u_boot_env "$UBOOT_ENV_OFFSET_1"
+clear_u_boot_env "$UBOOT_ENV_OFFSET_2"
 
 echo "[INFO] Resizing partition ${PARTITION} to fill remaining space..."
 
