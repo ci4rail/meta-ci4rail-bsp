@@ -6,10 +6,10 @@ SUMMARY = "tty over network"
 DESCRIPTION = "ttynvt makes a virtual serial device (tty) and connects the device to a Network Virtual Terminal (NVT)"
 HOMEPAGE = "https://gitlab.com/ci4rail/ttynvt"
 
-SRC_URI = "git://gitlab.com/ci4rail/ttynvt.git;branch=fix/odd-parity;protocol=https"
+SRC_URI = "git://gitlab.com/ci4rail/ttynvt.git;branch=master;protocol=https"
 
-SRCREV = "86556848b6f74debe48da077e18f0e6437478528"
-PV = "0.0.1+git${SRCPV}"
+SRCREV = "fbda9a58e7137300ab6739c1aed238031b7c0e63"
+PV = "0.0.2+git${SRCPV}"
 
 DEPENDS += "fuse"
 RDEPENDS:${PN} += "fuse"
