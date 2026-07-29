@@ -1,0 +1,110 @@
+From 7e4193491a4af9186e7bc1de662a58da8cdbd0db Mon Sep 17 00:00:00 2001
+From: kas User <kas@example.com>
+Date: Wed, 1 Apr 2026 06:29:54 +0000
+Subject: [PATCH 5/5] add simcom sim8230 support without vendor qmi driver
+
+Use upstream qmi_wwan for the SIM8230 RMNET composition so
+ModemManager can manage the QMI data interface directly.
+
+Keep the Simcom serial interface IDs and ZLP quirk from the original
+vendor patch, but drop the out-of-tree qmi_wwan_simcom net driver.
+
+---
+ drivers/net/usb/qmi_wwan.c   |  1 +
+ drivers/usb/serial/option.c  | 53 +++++++++++++++++++++++++++++++++++
+ drivers/usb/serial/usb_wwan.c |  6 ++++
+ 3 files changed, 60 insertions(+)
+
+diff --git a/drivers/net/usb/qmi_wwan.c b/drivers/net/usb/qmi_wwan.c
+--- a/drivers/net/usb/qmi_wwan.c
++++ b/drivers/net/usb/qmi_wwan.c
+@@ -1425,6 +1425,7 @@
+ 	{QMI_FIXED_INTF(0x03f0, 0x9d1d, 1)},	/* HP lt4120 Snapdragon X5 LTE */
+ 	{QMI_QUIRK_SET_DTR(0x22de, 0x9051, 2)}, /* Hucom Wireless HM-211S/K */
+ 	{QMI_FIXED_INTF(0x22de, 0x9061, 3)},	/* WeTelecom WPD-600N */
++	{QMI_QUIRK_SET_DTR(0x1e0e, 0x9071, 3)},	/* SIMCom 8230 RMNET */
+ 	{QMI_QUIRK_SET_DTR(0x1e0e, 0x9001, 5)},	/* SIMCom 7100E, 7230E, 7600E ++ */
+ 	{QMI_QUIRK_SET_DTR(0x2c7c, 0x0121, 4)},	/* Quectel EC21 Mini PCIe */
+ 	{QMI_QUIRK_SET_DTR(0x2c7c, 0x0191, 4)},	/* Quectel EG91 */
+diff --git a/drivers/usb/serial/option.c b/drivers/usb/serial/option.c
+--- a/drivers/usb/serial/option.c
++++ b/drivers/usb/serial/option.c
+@@ -2053,6 +2053,15 @@
+ 	  .driver_info = RSVD(7) },
+ 	{ USB_DEVICE_INTERFACE_CLASS(0x1e0e, 0x9205, 0xff) },	/* Simcom SIM7070/SIM7080/SIM7090 AT+ECM mode */
+ 	{ USB_DEVICE_INTERFACE_CLASS(0x1e0e, 0x9206, 0xff) },	/* Simcom SIM7070/SIM7080/SIM7090 AT-only mode */
++	{ USB_DEVICE(0x1e0e, 0x9001) }, /* SIM8200/SIM7600 RmNet */
++	{ USB_DEVICE(0x1e0e, 0x9011) }, /* SIM8200/SIM7600 RNDIS */
++	{ USB_DEVICE(0x1e0e, 0x9018) }, /* SIM8200/SIM7600 ECM */
++	{ USB_DEVICE(0x1e0e, 0x901E) }, /* SIM8200 MBIM */
++	{ USB_DEVICE(0x1e0e, 0x9071) }, /* SIMCom 8230 RMNET */
++	{ USB_DEVICE(0x1e0e, 0x9074) }, /* SIMCom 8230 PPP */
++	{ USB_DEVICE(0x1e0e, 0x9081) }, /* SIMCom 8230 RMNET */
++	{ USB_DEVICE(0x1e0e, 0x907B) }, /* SIMCom 8230 RNDIS */
++	{ USB_DEVICE(0x1e0e, 0x9078) }, /* SIMCom 8230 ECM */
+ 	{ USB_DEVICE(ALCATEL_VENDOR_ID, ALCATEL_PRODUCT_X060S_X200),
+ 	  .driver_info = NCTRL(0) | NCTRL(1) | RSVD(4) },
+ 	{ USB_DEVICE(ALCATEL_VENDOR_ID, ALCATEL_PRODUCT_X220_X500D),
+@@ -2428,6 +2437,44 @@
+ 				&serial->interface->cur_altsetting->desc;
+ 	unsigned long device_flags = id->driver_info;
+ 
++	#if 1 /* SIM8230 ++ */
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9071)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber >=3)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9074)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber >=4)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x907B)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber < 2)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x907B)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber >=5)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) &&serial->dev->descriptor.idProduct == cpu_to_le16(0x9078)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber >=3)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9081) &&
++	(serial->interface->cur_altsetting->desc.bInterfaceNumber == 2 || serial->interface->cur_altsetting->desc.bInterfaceNumber == 4))
++	return -ENODEV;
++	#endif
++	#if 1 /* SIM7600_SIM8200 ++ */
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9001)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber >=5)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9011)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber < 2)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9011)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber > 6)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x9018)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber >=5)
++	return -ENODEV;
++	if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E) && serial->dev->descriptor.idProduct == cpu_to_le16(0x901E)
++	&& serial->interface->cur_altsetting->desc.bInterfaceNumber >=2)
++	return -ENODEV;
++	#endif
++
+ 	/* Never bind to the CD-Rom emulation interface	*/
+ 	if (iface_desc->bInterfaceClass == USB_CLASS_MASS_STORAGE)
+ 		return -ENODEV;
+diff --git a/drivers/usb/serial/usb_wwan.c b/drivers/usb/serial/usb_wwan.c
+--- a/drivers/usb/serial/usb_wwan.c
++++ b/drivers/usb/serial/usb_wwan.c
+@@ -435,6 +435,12 @@
+ 
+ 	if (intfdata->use_zlp && dir == USB_DIR_OUT)
+ 		urb->transfer_flags |= URB_ZERO_PACKET;
++#if 1 /* Added by Simcom for ZLP */
++if (dir == USB_DIR_OUT) {
++if (serial->dev->descriptor.idVendor == cpu_to_le16(0x1E0E))
++urb->transfer_flags |= URB_ZERO_PACKET;
++}
++#endif
+ 
+ 	return urb;
+ }
+-- 
+2.34.1
