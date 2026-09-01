@@ -5,8 +5,8 @@ HOMEPAGE = "https://github.com/ci4rail/yocto-os-customization"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=d96591d67b8839e9adc28ed53a13beab"
 
-SRC_URI = "git://github.com/ci4rail/yocto-os-customization.git;protocol=https;branch=main"
-SRCREV = "2c84d5b093bb83bb5d28dc7147c9ddbc00c0600a"
+SRC_URI = "git://github.com/ci4rail/yocto-os-customization.git;protocol=https;branch=preinit-compat-check "
+SRCREV = "c8c2d14226f4ef5d386eb9b9c02215b4203a6055"
 
 PV = "1.0+git"
 S = "${WORKDIR}/git"

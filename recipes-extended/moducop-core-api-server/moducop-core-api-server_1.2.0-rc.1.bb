@@ -11,8 +11,8 @@ SRC_URI:aarch64 = "https://github.com/ci4rail/moducop-core-api-server/releases/d
 SRC_URI:append = " file://${BPN}.service"
 
 # Use github-release-checksums.sh script in yoct-images repo to update
-SRC_URI[arm64.md5sum] = "9d516ca900c697fd2d01b8810a7068ce"
-SRC_URI[arm64.sha256sum] = "bbabc759c8799aaaf1275da2739c7081e97294b0c994dfdb6d6805a957b0945c"
+SRC_URI[arm64.md5sum] = "eae74613a19f04a412f6af420d69e876"
+SRC_URI[arm64.sha256sum] = "8c38e3b790aa596263b2893595efc98b4a0df4f1df1cf7f223febefe52b51605"
 
 SYSTEMD_AUTO_ENABLE = "enable"
 SYSTEMD_SERVICE:${BPN} = "${BPN}.service"
