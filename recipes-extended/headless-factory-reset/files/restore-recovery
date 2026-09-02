@@ -223,8 +223,8 @@ main() {
     wait_for_api
     queue_io4edge_artifacts queued_devices
     wait_for_io4edge_artifacts "${queued_devices[@]}"
-    queue_core_os_artifact
     queue_application_artifacts
+    queue_core_os_artifact
 
     if [[ "$RESTORE_HAD_ERRORS" == true ]]; then
         log "Recovery completed with errors." >&2
