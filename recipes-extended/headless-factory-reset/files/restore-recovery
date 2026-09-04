@@ -1,0 +1,237 @@
+#!/bin/bash
+
+set -euo pipefail
+
+readonly API_BASE_URL="${RESTORE_RECOVERY_API_BASE_URL:-http://127.0.0.1:8090/api/v1/software}"
+readonly RECOVERY_DIR="${RESTORE_RECOVERY_DIR:-/data/recovery}"
+readonly TRIGGER_FILE="${RESTORE_RECOVERY_TRIGGER_FILE:-/data/boot-triggers/restore-recovery}"
+readonly API_READY_INTERVAL_SECONDS="${RESTORE_RECOVERY_API_READY_INTERVAL_SECONDS:-1}"
+readonly API_READY_TIMEOUT_SECONDS="${RESTORE_RECOVERY_API_READY_TIMEOUT_SECONDS:-60}"
+readonly IO4EDGE_POLL_INTERVAL_SECONDS="${RESTORE_RECOVERY_POLL_INTERVAL_SECONDS:-2}"
+readonly IO4EDGE_TIMEOUT_SECONDS="${RESTORE_RECOVERY_IO4EDGE_TIMEOUT_SECONDS:-600}"
+
+RESTORE_HAD_ERRORS=false
+LAST_PUT_WAS_QUEUED=false
+
+log() {
+    echo "restore-recovery: $*"
+}
+
+remove_trigger_on_exit() {
+    local exit_status=$?
+
+    trap - EXIT
+    rm -f "$TRIGGER_FILE"
+    sync
+    exit "$exit_status"
+}
+
+urlencode() {
+    printf '%s' "$1" | jq -sRr @uri
+}
+
+wait_for_api() {
+    local deadline=$(( SECONDS + API_READY_TIMEOUT_SECONDS ))
+    local health_url="${API_BASE_URL%/software}/hardware"
+
+    log "Waiting for core API server at $health_url"
+    while (( SECONDS < deadline )); do
+        if curl --silent --show-error --fail --max-time 2 --output /dev/null "$health_url"; then
+            log "Core API server is ready."
+            return 0
+        fi
+        sleep "$API_READY_INTERVAL_SECONDS"
+    done
+
+    log "Timed out waiting for core API server after $API_READY_TIMEOUT_SECONDS seconds" >&2
+    return 1
+}
+
+put_artifact() {
+    local endpoint="$1"
+    local artifact="$2"
+    local http_status
+
+    LAST_PUT_WAS_QUEUED=false
+    log "Queueing $artifact at $endpoint"
+    if ! http_status=$(curl --silent --show-error --output /dev/null \
+        --write-out '%{http_code}' \
+        --request PUT \
+        --header 'Content-Type: application/octet-stream' \
+        --data-binary "@$artifact" \
+        "$API_BASE_URL/$endpoint"); then
+        log "Failed to submit $artifact" >&2
+        return 1
+    fi
+
+    case "$http_status" in
+        202)
+            LAST_PUT_WAS_QUEUED=true
+            ;;
+        409)
+            log "$artifact is already deployed; continuing."
+            ;;
+        *)
+            log "API rejected $artifact with HTTP status $http_status" >&2
+            return 1
+            ;;
+    esac
+}
+
+find_artifacts() {
+    local directory="$1"
+    local pattern="$2"
+
+    [[ -d "$directory" ]] || return 0
+    find "$directory" -maxdepth 1 -type f -name "$pattern" -print0 | sort -z
+}
+
+require_single_artifact() {
+    local directory="$1"
+    local pattern="$2"
+    local description="$3"
+    local -n result="$4"
+    local artifacts=()
+
+    mapfile -d '' -t artifacts < <(find_artifacts "$directory" "$pattern")
+    if (( ${#artifacts[@]} > 1 )); then
+        log "$description contains more than one artifact matching $pattern" >&2
+        return 1
+    fi
+    result="${artifacts[0]:-}"
+}
+
+queue_io4edge_artifacts() {
+    local device_dir device_name artifact
+    local -n queued_devices_ref="$1"
+
+    [[ -d "$RECOVERY_DIR/io4edge" ]] || return 0
+    while IFS= read -r -d '' device_dir; do
+        device_name=$(basename "$device_dir")
+        artifact=""
+        if ! require_single_artifact "$device_dir" '*.fwpkg' "io4edge device directory $device_dir" artifact; then
+            RESTORE_HAD_ERRORS=true
+            continue
+        fi
+        [[ -n "$artifact" ]] || continue
+        if put_artifact "io4edge/$(urlencode "$device_name")" "$artifact"; then
+            if [[ "$LAST_PUT_WAS_QUEUED" == true ]]; then
+                queued_devices_ref+=("$device_name")
+            fi
+        else
+            RESTORE_HAD_ERRORS=true
+        fi
+    done < <(find "$RECOVERY_DIR/io4edge" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+}
+
+wait_for_io4edge_artifacts() {
+    local -a devices=("$@")
+    local deadline=$(( SECONDS + IO4EDGE_TIMEOUT_SECONDS ))
+    local device response status
+    local -A pending=()
+
+    (( ${#devices[@]} > 0 )) || return 0
+    for device in "${devices[@]}"; do
+        pending["$device"]=1
+    done
+
+    while (( ${#pending[@]} > 0 && SECONDS < deadline )); do
+        for device in "${devices[@]}"; do
+            [[ -n "${pending[$device]:-}" ]] || continue
+            if ! response=$(curl --silent --show-error --fail \
+                "$API_BASE_URL/io4edge/$(urlencode "$device")"); then
+                log "Failed to query io4edge deployment status for $device" >&2
+                RESTORE_HAD_ERRORS=true
+                unset 'pending[$device]'
+                continue
+            fi
+            if ! status=$(jq -er '.deploy_status.code' <<<"$response"); then
+                log "Invalid io4edge deployment status response for $device" >&2
+                RESTORE_HAD_ERRORS=true
+                unset 'pending[$device]'
+                continue
+            fi
+            case "$status" in
+                success|already_deployed)
+                    unset 'pending[$device]'
+                    ;;
+                in_progress)
+                    ;;
+                failure)
+                    log "io4edge deployment for $device failed: $(jq -r '.deploy_status.message // ""' <<<"$response")" >&2
+                    RESTORE_HAD_ERRORS=true
+                    unset 'pending[$device]'
+                    ;;
+                *)
+                    log "Unexpected io4edge deployment status '$status' for $device" >&2
+                    RESTORE_HAD_ERRORS=true
+                    unset 'pending[$device]'
+                    ;;
+            esac
+        done
+        (( ${#pending[@]} == 0 )) || sleep "$IO4EDGE_POLL_INTERVAL_SECONDS"
+    done
+
+    if (( ${#pending[@]} > 0 )); then
+        for device in "${!pending[@]}"; do
+            log "Timed out waiting for io4edge deployment for $device" >&2
+        done
+        RESTORE_HAD_ERRORS=true
+    fi
+}
+
+queue_core_os_artifact() {
+    local artifact=""
+
+    if ! require_single_artifact "$RECOVERY_DIR/core-os" '*.mender' "core-os recovery directory" artifact; then
+        RESTORE_HAD_ERRORS=true
+        return 0
+    fi
+    [[ -n "$artifact" ]] || return 0
+    if ! put_artifact "core-os" "$artifact"; then
+        RESTORE_HAD_ERRORS=true
+    fi
+}
+
+queue_application_artifacts() {
+    local application_dir application_name artifact
+
+    [[ -d "$RECOVERY_DIR/application" ]] || return 0
+    while IFS= read -r -d '' application_dir; do
+        application_name=$(basename "$application_dir")
+        artifact=""
+        if ! require_single_artifact "$application_dir" '*.mender' "application directory $application_dir" artifact; then
+            RESTORE_HAD_ERRORS=true
+            continue
+        fi
+        [[ -n "$artifact" ]] || continue
+        if ! put_artifact "application/$(urlencode "$application_name")" "$artifact"; then
+            RESTORE_HAD_ERRORS=true
+        fi
+    done < <(find "$RECOVERY_DIR/application" -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+}
+
+main() {
+    local queued_devices=()
+
+    if [[ ! -f "$TRIGGER_FILE" ]]; then
+        log "Trigger is not set; nothing to do."
+        return 0
+    fi
+    trap remove_trigger_on_exit EXIT
+
+    wait_for_api
+    queue_io4edge_artifacts queued_devices
+    wait_for_io4edge_artifacts "${queued_devices[@]}"
+    queue_application_artifacts
+    queue_core_os_artifact
+
+    if [[ "$RESTORE_HAD_ERRORS" == true ]]; then
+        log "Recovery completed with errors." >&2
+        return 1
+    fi
+
+    log "All recovery deployments have been queued successfully."
+}
+
+main "$@"
