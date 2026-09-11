@@ -77,4 +77,12 @@ find "$DATA_DIR" -mindepth 1 ! \( "${EXCLUDE_EXPR[@]}" \) -exec rm -rf {} +
 sync
 echo "Data deletion complete."
 
+# Request restoration of locally stored recovery artifacts on the next boot.
+# This trigger is deliberately created after the data deletion, so the trigger
+# directory itself does not need to be excluded from factory reset.
+install -d -m 0755 /data/boot-triggers
+touch /data/boot-triggers/restore-recovery
+sync
+echo "Recovery restore requested for the next boot."
+
 exit 0

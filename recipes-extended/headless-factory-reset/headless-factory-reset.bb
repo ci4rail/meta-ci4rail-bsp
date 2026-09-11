@@ -9,6 +9,8 @@ SRC_URI = "file://factory-reset \
            file://reset-data-partition \
            file://reset-data-partition.service \
            file://reset-data-partition-failed.service \
+           file://restore-recovery \
+           file://restore-recovery.service \
            file://factory-reset-excludes.conf \
           "
 
@@ -18,6 +20,7 @@ inherit features_check
 SYSTEMD_SERVICE:${PN} = " \
     reset-data-partition-failed.service \
     reset-data-partition.service \
+    restore-recovery.service \
     headless-reset-system.target \
     "
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
@@ -28,6 +31,7 @@ do_install() {
     install -m 0644 ${WORKDIR}/headless-reset-system.target ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/reset-data-partition.service ${D}${systemd_system_unitdir}/
     install -m 0644 ${WORKDIR}/reset-data-partition-failed.service ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/restore-recovery.service ${D}${systemd_system_unitdir}/
 
     # configuration
     install -d ${D}${sysconfdir}
@@ -37,6 +41,7 @@ do_install() {
     install -d ${D}${libexecdir}
     install -d ${D}${sbindir}
     install -m 0700 ${WORKDIR}/reset-data-partition ${D}${libexecdir}
+    install -m 0700 ${WORKDIR}/restore-recovery ${D}${libexecdir}
     install -m 0755 ${WORKDIR}/factory-reset ${D}${sbindir}
 }
 
@@ -46,11 +51,13 @@ FILES:${PN} += "\
     ${systemd_system_unitdir}/headless-reset-system.target \
     ${systemd_system_unitdir}/reset-data-partition.service \
     ${systemd_system_unitdir}/reset-data-partition-failed.service \
+    ${systemd_system_unitdir}/restore-recovery.service \
     ${sysconfdir}/factory-reset-excludes.conf \
     ${libexecdir}/reset-data-partition \
+    ${libexecdir}/restore-recovery \
     ${sbindir}/factory-reset \
 "
 
-RDEPENDS:${PN} += "bash util-linux-findmnt util-linux-umount"
+RDEPENDS:${PN} += "bash coreutils curl jq moducop-core-api-server util-linux-findmnt util-linux-umount"
 
 REQUIRED_DISTRO_FEATURES = "systemd"
