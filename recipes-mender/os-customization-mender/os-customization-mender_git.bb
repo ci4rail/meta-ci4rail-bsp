@@ -6,7 +6,7 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=d96591d67b8839e9adc28ed53a13beab"
 
 SRC_URI = "git://github.com/ci4rail/yocto-os-customization.git;protocol=https;branch=main "
-SRCREV = "c66e60fac9c977934b29f074453dce5e0c7830d1"
+SRCREV = "d3055e4ccffb29095ba10cf9eeb56b2881dfab66"
 
 
 PV = "1.0+git"
