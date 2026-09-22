@@ -16,12 +16,6 @@ IMAGE_NAME = "${MACHINE_NAME}_${IMAGE_BASENAME}_${GIT_VERSION}${NAME_SUFFIX}"
 # At the moment, we don't use overlays, so the toradex_mender_update_devicetree_overlays() would fail
 ROOTFS_POSTPROCESS_COMMAND:remove = " toradex_mender_update_devicetree_overlays;"
 
-OVERLAYFS_ETC_MOUNT_POINT ?= "/data"
-OVERLAYFS_ETC_FSTYPE ?= "ext4"
-OVERLAYFS_ETC_DEVICE ?= "${MENDER_DATA_PART}"
-OVERLAYFS_ETC_CREATE_MOUNT_DIRS ?= "0"
-OVERLAYFS_ETC_EXPOSE_LOWER ?= "1"
-
 # Copy Licenses to image /usr/share/common-license
 COPY_LIC_MANIFEST ?= "1"
 COPY_LIC_DIRS ?= "1"
@@ -32,7 +26,6 @@ IMAGE_LINGUAS = "en-us"
 
 IMAGE_FEATURES += "\
                    read-only-rootfs \
-                   overlayfs-etc \
                    "
 #package-management
 ROOTFS_RO_UNNEEDED ?= "update-rc.d base-passwd"
@@ -42,6 +35,8 @@ ROOTFS_RO_UNNEEDED ?= "update-rc.d base-passwd"
 IMAGE_INSTALL += "\
                   packagegroup-boot \
                   packagegroup-basic \
+                  os-customization \
+                  os-customization-mender \
                   can-utils \
                   dosfstools \
                   e2fsprogs-mke2fs \
@@ -132,4 +127,3 @@ IMAGE_INSTALL += "\
                   net-snmp-dev \
                   moducop-core-api-server \
                 "
-
