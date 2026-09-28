@@ -8,8 +8,8 @@ HOMEPAGE = "https://gitlab.com/ci4rail/ttynvt"
 
 SRC_URI = "git://gitlab.com/ci4rail/ttynvt.git;branch=master;protocol=https"
 
-SRCREV = "69992ea87f980a8f85d4bbfc9cb2a2b216d8768e"
-PV = "0.0.1+git${SRCPV}"
+SRCREV = "fbda9a58e7137300ab6739c1aed238031b7c0e63"
+PV = "0.0.2+git${SRCPV}"
 
 DEPENDS += "fuse"
 RDEPENDS:${PN} += "fuse"

@@ -1,0 +1,13 @@
+[Unit]
+Description=Restore recovery artifacts after factory reset
+ConditionPathExists=/data/boot-triggers/restore-recovery
+Requires=moducop-core-api-server.service
+After=moducop-core-api-server.service
+RequiresMountsFor=/data
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/restore-recovery
+
+[Install]
+WantedBy=multi-user.target
