@@ -1,0 +1,10 @@
+[Unit]
+Description=Prepare persistent log directory
+DefaultDependencies=no
+RequiresMountsFor=/data
+Before=var-log.mount
+
+[Service]
+Type=oneshot
+ExecStart=/bin/mkdir -p /data/log/journal
+RemainAfterExit=yes

@@ -1,1 +1,6 @@
 DROPBEAR_EXTRA_ARGS=""
+# This is needed to work with os-customization package.
+# When overlay-etc is not enabled, but r/o rootfs is used,, 
+# openembedded-core/meta/classes-recipe/rootfs-postcommands.bbclass
+# would direct dropbear to use /var/lib/dropbear.
+DROPBEAR_RSAKEY_DIR="/etc/dropbear"
