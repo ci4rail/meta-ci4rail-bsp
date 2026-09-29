@@ -1,0 +1,18 @@
+[Unit]
+Description=Persistent logs on the Mender data partition
+DefaultDependencies=no
+Requires=persistent-logging-prepare.service
+After=persistent-logging-prepare.service
+Before=local-fs.target systemd-journal-flush.service systemd-tmpfiles-setup.service
+RequiresMountsFor=/data
+Conflicts=umount.target
+Before=umount.target
+
+[Mount]
+What=/data/log
+Where=/var/log
+Type=none
+Options=bind
+
+[Install]
+WantedBy=local-fs.target
