@@ -1,0 +1,26 @@
+From: Ci4Rail <engineering@ci4rail.com>
+Subject: [PATCH] mmc: retry recovery SD CMD8 after a short delay
+
+Some recovery SD cards time out on their first CMD8 but respond after
+50 ms. Retry once on timeout for MMC1 in U-Boot proper. Preserve the
+same retry on the existing UHS fallback attempt, without diagnostic
+prints. Leave SPL, eMMC and the normal protocol fallback unchanged.
+
+Upstream-Status: Inappropriate [ModuCop recovery SD workaround]
+
+diff --git a/drivers/mmc/mmc.c b/drivers/mmc/mmc.c
+--- a/drivers/mmc/mmc.c
++++ b/drivers/mmc/mmc.c
+@@ -2905,6 +2905,12 @@
+ 
+ 	/* Test for SD version 2 */
+ 	err = mmc_send_if_cond(mmc);
++	/* Allow a slow-starting recovery SD card one delayed CMD8 retry. */
++	if (err == -ETIMEDOUT && !IS_ENABLED(CONFIG_SPL_BUILD) &&
++	    mmc_get_blk_desc(mmc)->devnum == 1) {
++		mdelay(50);
++		err = mmc_send_if_cond(mmc);
++	}
+ 
+ 	/* Now try to get the SD card's operating condition */
+ 	err = sd_send_op_cond(mmc, uhs_en);

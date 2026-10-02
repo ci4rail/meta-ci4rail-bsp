@@ -1,0 +1,133 @@
+From: Ci4Rail <engineering@ci4rail.com>
+Subject: [PATCH] moducop: try fixed SD recovery before environment boot policy
+
+Check mmc 1 partition 1 for recovery.itb before preboot and bootcount
+handling. Use fixed arguments and a fixed FIT configuration, preserving
+Toradex load, signature and bootargs protection. Missing media/files fall
+through; a detected image that cannot boot fails closed with panic.
+
+Upstream-Status: Inappropriate [ModuCop board policy]
+
+diff --git a/common/main.c b/common/main.c
+--- a/common/main.c
++++ b/common/main.c
+@@ -17,6 +17,7 @@
+ #include <env.h>
+ #include <fdtdec.h>
+ #include <init.h>
++#include <moducop-recovery.h>
+ #include <net.h>
+ #include <version_string.h>
+ #include <efi_loader.h>
+@@ -51,6 +52,8 @@
+ 		env_set("ver", version_string);  /* set version variable */
+ 
+ 	cli_init();
++
++	moducop_try_sd_recovery();
+ 
+ 	if (IS_ENABLED(CONFIG_USE_PREBOOT))
+ 		run_preboot_environment_command();
+diff --git a/common/Makefile b/common/Makefile
+--- a/common/Makefile
++++ b/common/Makefile
+@@ -7,6 +7,7 @@
+ ifndef CONFIG_SPL_BUILD
+ obj-y += init/
+ obj-y += main.o
++obj-y += moducop-recovery.o
+ obj-y += exports.o
+ obj-y += cli_getch.o cli_simple.o cli_readline.o
+ obj-$(CONFIG_HUSH_OLD_PARSER) += cli_hush.o
+diff --git a/common/moducop-recovery.c b/common/moducop-recovery.c
+new file mode 100644
+--- /dev/null
++++ b/common/moducop-recovery.c
+@@ -0,0 +1,75 @@
++// SPDX-License-Identifier: GPL-2.0+
++/* Fixed SD recovery policy for ModuCop CPU01 and CPU01Plus. */
++
++#include <common.h>
++#include <command.h>
++#include <console.h>
++#include <env.h>
++#include <fs.h>
++#include <linux/libfdt.h>
++#include <moducop-recovery.h>
++
++#define RECOVERY_ADDR	0x60000000UL
++#define RECOVERY_MAX_SIZE	0x10000000UL /* 256 MiB; matches FIT signature size limit */
++#define RECOVERY_FILE	"/recovery.itb"
++
++#ifdef CONFIG_TARGET_VERDIN_IMX8MP
++#define RECOVERY_CONSOLE "console=ttymxc2,115200 "
++#else
++#define RECOVERY_CONSOLE "console=ttymxc0,115200 "
++#endif
++
++#define RECOVERY_BOOTARGS RECOVERY_CONSOLE \
++	"root=/dev/ram0 rootfstype=squashfs ro ramdisk_size=393216"
++
++void moducop_try_sd_recovery(void)
++{
++	const void *fit = (const void *)RECOVERY_ADDR;
++	loff_t size;
++	int ctrlc;
++
++	/* Run before environment scripts and Mender bootcount/rollback handling. */
++	ctrlc = disable_ctrlc(1);
++	if (fs_set_blk_dev("mmc", "1:1", FS_TYPE_ANY) ||
++	    fs_size(RECOVERY_FILE, &size)) {
++		disable_ctrlc(ctrlc);
++		return;
++	}
++
++	puts("ModuCop: booting SD recovery from mmc 1:1 /recovery.itb\n");
++	if (size < (loff_t)sizeof(struct fdt_header) ||
++	    size > (loff_t)RECOVERY_MAX_SIZE)
++		panic("ModuCop: invalid recovery FIT size\n");
++
++	/*
++	 * Use the regular load command so Toradex's LMB/load protection remains
++	 * active. Bound the read even if the media changes after fs_size(). No
++	 * command, address, filename or configuration comes from the environment.
++	 */
++	if (run_command("load mmc 1:1 0x60000000 /recovery.itb 0x10000000", 0))
++		panic("ModuCop: failed to load recovery FIT\n");
++	if (fdt_check_header(fit) || fdt_totalsize(fit) > size)
++		panic("ModuCop: invalid recovery FIT header\n");
++
++	/*
++	 * bootm consumes these internal environment values. Always overwrite
++	 * persisted settings; never save them. The signed recovery DT must carry
++	 * exactly RECOVERY_BOOTARGS in /chosen/toradex,secure-boot/required-bootargs.
++	 */
++	if (env_set("bootargs", RECOVERY_BOOTARGS) ||
++	    env_set("bootm_low", "0x40000000") ||
++	    env_set("bootm_size", "0x58000000") ||
++	    env_set("bootm_mapsize", NULL) ||
++	    env_set("fdt_high", NULL) ||
++	    env_set("initrd_high", NULL) ||
++	    env_set("silent_linux", "no") ||
++	    env_set("verify", "yes") ||
++	    env_set("autostart", "yes"))
++		panic("ModuCop: failed to set recovery boot parameters\n");
++
++	/* Explicit configuration selection retains Toradex FIT enforcement. */
++	run_command("bootm 0x60000000#recovery", 0);
++
++	/* Never expose the CLI or continue with partially modified boot state. */
++	panic("ModuCop: recovery boot failed\n");
++}
+diff --git a/include/moducop-recovery.h b/include/moducop-recovery.h
+new file mode 100644
+--- /dev/null
++++ b/include/moducop-recovery.h
+@@ -0,0 +1,7 @@
++/* SPDX-License-Identifier: GPL-2.0+ */
++#ifndef __MODUCOP_RECOVERY_H
++#define __MODUCOP_RECOVERY_H
++
++void moducop_try_sd_recovery(void);
++
++#endif
