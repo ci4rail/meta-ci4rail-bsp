@@ -14,6 +14,7 @@ PATCH = Path(__file__).resolve().parents[1] / "files/0001-moducop-boot-sd-recove
 
 HARNESS = r'''
 #include <assert.h>
+#include <stdbool.h>
 #include <setjmp.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -30,6 +31,47 @@ enum scenario {
 static int scenario, ctrlc, loads, boots, writes;
 static jmp_buf outcome;
 static char bootargs[256];
+static unsigned long now;
+static int input_mode, prompted, stale_read, schedules;
+
+static int mock_puts(const char *message)
+{
+    if (strstr(message, "Boot from SD card?"))
+        prompted = 1;
+    return 0;
+}
+#define puts mock_puts
+static unsigned long get_timer(unsigned long base) { return now - base; }
+static void schedule(void) { ++schedules; }
+static void mdelay(unsigned long ms) { now += ms; }
+static int tstc(void)
+{
+    if (!prompted)
+        return input_mode == 6 && !stale_read;
+    if (input_mode == 4 || input_mode == 6)
+        return 0; /* No input, or only a buffered y before the prompt. */
+    if (input_mode == 5)
+        return now >= 10000; /* Confirmation arrives too late. */
+    if (input_mode == 7)
+        return now >= 9999;
+    return 1;
+}
+static int mock_getchar(void)
+{
+    assert(ctrlc == 1);
+    if (!prompted) {
+        ++stale_read;
+        return 'y';
+    }
+    switch (input_mode) {
+    case 1: return 'Y';
+    case 2: return 'n';
+    case 3: return 3; /* Ctrl-C declines; never opens a shell. */
+    case 8: return '\r';
+    default: return 'y';
+    }
+}
+#define getchar mock_getchar
 
 static int disable_ctrlc(int value)
 {
@@ -103,7 +145,8 @@ static _Noreturn void panic(const char *message)
 MAIN = r'''
 int main(int argc, char **argv)
 {
-    assert(argc == 3);
+    assert(argc == 4);
+    input_mode = atoi(argv[3]);
     scenario = atoi(argv[1]);
     ctrlc = atoi(argv[2]);
     int initial_ctrlc = ctrlc;
@@ -111,10 +154,17 @@ int main(int argc, char **argv)
     int result = setjmp(outcome);
     if (!result)
         moducop_try_sd_recovery();
-    if (scenario <= NO_FILE) {
+    if (scenario <= NO_FILE || (input_mode >= 2 && input_mode <= 6) || input_mode == 8) {
         assert(result == 0 && ctrlc == initial_ctrlc);
         assert(loads == 0 && boots == 0 && writes == 0);
         assert(!strcmp(bootargs, "untrusted persisted bootargs"));
+        if (scenario <= NO_FILE)
+            assert(!prompted);
+        else {
+            assert(prompted);
+            if (input_mode >= 4 && input_mode <= 6)
+                assert(now == 10000 && schedules >= 10000);
+        }
     } else {
         assert(result == (scenario == BOOT_OK ? 2 : 1));
         assert(ctrlc == 1);
@@ -150,9 +200,11 @@ class RecoveryPolicyTest(unittest.TestCase):
                                 str(c_file), "-o", str(binary)], check=True)
                 for scenario in range(10):
                     for ctrlc in (0, 1):
-                        with self.subTest(platform=platform, scenario=scenario, ctrlc=ctrlc):
-                            subprocess.run([str(binary), str(scenario), str(ctrlc)],
-                                           check=True, stdout=subprocess.DEVNULL)
+                        for mode in range(9):
+                            with self.subTest(platform=platform, scenario=scenario,
+                                              ctrlc=ctrlc, mode=mode):
+                                subprocess.run([str(binary), str(scenario), str(ctrlc), str(mode)],
+                                               check=True, stdout=subprocess.DEVNULL)
 
 
 if __name__ == "__main__":

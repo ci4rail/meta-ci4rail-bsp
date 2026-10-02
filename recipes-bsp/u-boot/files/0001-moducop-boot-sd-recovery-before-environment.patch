@@ -4,7 +4,9 @@ Subject: [PATCH] moducop: try fixed SD recovery before environment boot policy
 Check mmc 1 partition 1 for recovery.itb before preboot and bootcount
 handling. Use fixed arguments and a fixed FIT configuration, preserving
 Toradex load, signature and bootargs protection. Missing media/files fall
-through; a detected image that cannot boot fails closed with panic.
+through. Require console confirmation within 10 seconds before loading
+the recovery image; rejection or timeout continues normal boot. Once
+confirmed, an image that cannot boot fails closed with panic.
 
 Upstream-Status: Inappropriate [ModuCop board policy]
 
@@ -43,13 +45,15 @@ diff --git a/common/moducop-recovery.c b/common/moducop-recovery.c
 new file mode 100644
 --- /dev/null
 +++ b/common/moducop-recovery.c
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,111 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +/* Fixed SD recovery policy for ModuCop CPU01 and CPU01Plus. */
 +
 +#include <common.h>
 +#include <command.h>
 +#include <console.h>
++#include <cyclic.h>
++#include <linux/delay.h>
 +#include <env.h>
 +#include <fs.h>
 +#include <linux/libfdt.h>
@@ -68,6 +72,34 @@ new file mode 100644
 +#define RECOVERY_BOOTARGS RECOVERY_CONSOLE \
 +	"root=/dev/ram0 rootfstype=squashfs ro ramdisk_size=393216"
 +
++static bool moducop_confirm_sd_recovery(void)
++{
++	ulong start = get_timer(0);
++
++	/* Discard buffered input; it must not confirm recovery accidentally. */
++	while (tstc()) {
++		getchar();
++		schedule();
++		if (get_timer(start) >= 100)
++			return false;
++	}
++
++	puts("Boot from SD card? Press y to confirm within 10 seconds [y/N]: ");
++	start = get_timer(0);
++	while (get_timer(start) < 10000) {
++		if (tstc()) {
++			int ch = getchar();
++
++			puts("\n");
++			return ch == 'y' || ch == 'Y';
++		}
++		schedule();
++		mdelay(1);
++	}
++	puts("\nSD recovery confirmation timed out.\n");
++	return false;
++}
++
 +void moducop_try_sd_recovery(void)
 +{
 +	const void *fit = (const void *)RECOVERY_ADDR;
@@ -78,6 +110,12 @@ new file mode 100644
 +	ctrlc = disable_ctrlc(1);
 +	if (fs_set_blk_dev("mmc", "1:1", FS_TYPE_ANY) ||
 +	    fs_size(RECOVERY_FILE, &size)) {
++		disable_ctrlc(ctrlc);
++		return;
++	}
++
++	if (!moducop_confirm_sd_recovery()) {
++		puts("Continuing normal boot.\n");
 +		disable_ctrlc(ctrlc);
 +		return;
 +	}
