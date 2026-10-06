@@ -139,8 +139,8 @@ inline void ValidateFiles(const std::string &root) {
     }
     PublicKey(Read(base + "ci4rail-artifact-pub.pem"));
     Verify(Read(base + "ci4rail-delegation-pub.pem"),
-           Read(root + "/data/ci4rail/ota/customer-artifact-pub.pem"),
-           Read(root + "/data/ci4rail/ota/customer-artifact-pub.pem.sig"));
+           Read(root + "/etc/ota/customer-artifact-pub.pem"),
+           Read(root + "/etc/ota/customer-artifact-pub.pem.sig"));
 }
 
 inline void ValidateInvocation(int argc, char **argv) {

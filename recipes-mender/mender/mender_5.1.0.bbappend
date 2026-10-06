@@ -32,7 +32,7 @@ python do_prepare_mender_conf:append() {
     config.pop('ArtifactVerifyKey', None)
     config['ArtifactVerifyKeys'] = [
         '/usr/share/ci4rail/ota/ci4rail-artifact-pub.pem',
-        '/data/ci4rail/ota/customer-artifact-pub.pem',
+        '/etc/ota/customer-artifact-pub.pem',
     ]
     with open(path, 'w') as stream:
         json.dump(config, stream, indent=4, sort_keys=True)
