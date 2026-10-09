@@ -15,13 +15,17 @@
 
 #
 # Based on https://raw.githubusercontent.com/mendersoftware/app-update-module/1.0.0/src/app-modules/docker-compose
-# Modified by CI4RAIL to work with the docker-compose v1.25.* version and podman
+# CI4Rail: Docker Compose v2, persistent image snapshots and optional readiness checks.
 
-MODULE_CONFIG_FILE="/etc/mender/mender-app-docker-compose.conf"
+set -e
+MODULE_CONFIG_FILE="${MENDER_APP_COMPOSE_CONFIG_FILE:-/etc/mender/mender-app-docker-compose.conf}"
+if test -f "$MODULE_CONFIG_FILE"; then
+    . "$MODULE_CONFIG_FILE"
+fi
 
-# podman load needs a big tmpdir
-export TMPDIR=/data/containers/tmp
-mkdir -p $TMPDIR
+# Keep image/delta temporary files on the persistent data filesystem.
+export TMPDIR="${TMPDIR:-/data/containers/tmp}"
+mkdir -p "$TMPDIR"
 
 _docker_compose_cmd=""
 docker_cmd=${DOCKER_COMMAND:-"docker"}
@@ -30,40 +34,13 @@ delta_arguments=${XDELTA_ARGS:-"-d -s"}
 delta_cmd="${delta_executable} ${delta_arguments}"
 
 _discover_compose() {
-    local rc=0
-    if test -n "$DOCKER_COMPOSE_COMMAND"; then
-        _docker_compose_cmd="$DOCKER_COMPOSE_COMMAND"
-        $_docker_compose_cmd version < /dev/null > /dev/null 2>&1
-        rc=$?
-    elif $docker_cmd compose version < /dev/null > /dev/null 2>&1; then
-        if $docker_cmd compose version | grep -q podman; then
-            # podman-compose is a drop-in replacement for docker-compose
-            _docker_compose_cmd="podman-compose"
-        else
-            # docker-compose v2
-            _docker_compose_cmd="$docker_cmd compose"
-        fi
-    elif docker-compose version < /dev/null > /dev/null 2>&1; then
-        _docker_compose_cmd="docker-compose"
-    else
-        echo "error: could not find executable for Docker Compose" 1>&2
-        echo "error: is Docker Compose installed?" 1>&2
-        rc=127
-    fi
-    if test $rc -eq 0; then
-        compose_version=$($_docker_compose_cmd version --short)
-        case "$_docker_compose_cmd $compose_version" in
-            "$docker_cmd compose 2."*)  ;;
-            # ci4rail: Our version works with 1.25.*
-            "docker-compose 1.25"*)  ;;
-            "podman-compose 1."*)  ;;
-            *)
-                echo "incompatible compose command; installed version: <${_docker_compose_cmd} ${compose_version}>"
-                rc=1
-                ;;
-        esac
-    fi
-    return $rc
+    local version
+    _docker_compose_cmd="${DOCKER_COMPOSE_COMMAND:-$docker_cmd compose}"
+    version=$($_docker_compose_cmd version --short) || return $?
+    case "$version" in
+        2.*|v2.*) ;;
+        *) echo "Docker Compose v2 is required; found: $version" >&2; return 1 ;;
+    esac
 }
 
 # docker_compose_cmd project_dir command
@@ -76,14 +53,14 @@ docker_compose_cmd() {
             return $rc
         fi
     fi
-    project_dir=$1
+    local project_dir="$1"
     shift
-
-    echo "docker-compose:running:$_docker_compose_cmd $@"
-    
-    # need to change into the project directory to run docker-compose
-    # because --project-directory is not working
-    cd ${project_dir} && $_docker_compose_cmd "$@"
+    # Logs must not contaminate config/ps output consumed by callers.
+    echo "docker-compose:running:$_docker_compose_cmd $*" >&2
+    if test -f "$project_dir/.mender-compose.yml"; then
+        set -- -f "$project_dir/.mender-compose.yml" -f "$project_dir/.mender-images.yml" "$@"
+    fi
+    $_docker_compose_cmd --project-directory "$project_dir" "$@"
 }
 
 unpack_image() {
@@ -256,109 +233,206 @@ app_save() {
     $docker_cmd image save "$url" -o "$output_file"
 }
 
-app_rollout() {
-    local application_name="$1"
-    local manifests_dir="$2"
-    local rc=0
+# Use engine labels rather than Compose's version-dependent ps JSON format.
+service_containers() {
+    $docker_cmd ps -aq --filter "label=com.docker.compose.project=$1" \
+        --filter "label=com.docker.compose.service=$2" \
+        --filter "label=com.docker.compose.oneoff=False"
+}
 
-    docker_compose_cmd $manifests_dir \
-        --project-name "$application_name" \
-         up -d --remove-orphans > "$manifests_dir"/compose.log 2>&1
-        # this was the original line
-        # --wait not supported in docker-compose v1
-        # up -d --wait --remove-orphans > "$manifests_dir"/compose.log 2>&1
-    rc="$?"
-    if test "$rc" != "0"; then
-        echo "app_rollout failed to start composition, logs follow:" 1>&2
-        cat "$manifests_dir/compose.log" 1>&2
-        docker_compose_cmd $manifests_dir \
-            --project-name "$application_name" \
-             logs -t 1>&2
-        return $rc
+# Resolve at the final path so relative bind mounts keep their canonical paths.
+# Save substitutions once; later artifacts may supply different environment values.
+app_resolve() {
+    docker_compose_cmd "$2" --project-name "$1" config --format json > "$2/.mender-compose.yml.new"
+    printf '{"services": {}}\n' > "$2/.mender-images.yml.new"
+    mv "$2/.mender-images.yml.new" "$2/.mender-images.yml"
+    mv "$2/.mender-compose.yml.new" "$2/.mender-compose.yml"
+}
+
+app_validate() {
+    docker_compose_cmd "$2" --project-name "$1" config >/dev/null
+}
+
+# Archive by immutable ID, and record mutable tags separately. This survives
+# image load moving a tag, and rollback works without registry/network access.
+backup_references() {
+    local refs="$1" backup="$2" ref id
+    mkdir -p "$backup"
+    : > "$backup/tags"
+    : > "$backup/ids"
+    while IFS= read -r ref; do
+        test -n "$ref" || continue
+        if id=$($docker_cmd image inspect --format '{{.Id}}' "$ref" 2>/dev/null); then
+            printf '%s\n' "$id" >> "$backup/ids"
+            case "$ref" in
+                sha256:*|*@*) ;;
+                *) printf '%s %s\n' "$id" "$ref" >> "$backup/tags" ;;
+            esac
+        else
+            # Missing images need no backup; an unavailable engine must fail
+            # preparation rather than silently discard an existing tag mapping.
+            $docker_cmd info >/dev/null
+        fi
+    done < "$refs"
+}
+
+save_backup() {
+    local backup="$1"
+    sort -u "$backup/ids" > "$backup/unique-ids"
+    if test -s "$backup/unique-ids"; then
+        # IDs contain no whitespace or shell metacharacters.
+        $docker_cmd image save -o "$backup/images.tar" $(cat "$backup/unique-ids")
     fi
-    return 0
+}
+
+app_snapshot() {
+    local application_name="$1" manifests_dir="$2" backup="$3"
+    local services service ids id image first info
+    mkdir -p "$backup"
+    docker_compose_cmd "$manifests_dir" --project-name "$application_name" config --format json > "$backup/compose.json"
+    # Restoring archived images must never depend on registry availability.
+    jq '(.services[].pull_policy) = "never"' "$backup/compose.json" > "$backup/compose.yml"
+    : > "$backup/refs"
+    : > "$backup/runtime-ids"
+    services=$(jq -r '.services | keys[]' "$backup/compose.yml")
+    test -n "$services" || { echo "Cannot snapshot an empty composition" >&2; return 1; }
+    printf '{"services": {}}\n' > "$backup/images.yml"
+    for service in $services; do
+        ids=$(service_containers "$application_name" "$service")
+        test -n "$ids" || { echo "Cannot snapshot service without a container: $service" >&2; return 1; }
+        first=""
+        for id in $ids; do
+            info=$($docker_cmd inspect "$id")
+            image=$(printf '%s\n' "$info" | jq -er '.[0].Image')
+            printf '%s\n' "$info" | jq -er '.[0].Config.Image' >> "$backup/refs"
+            if test -n "$first" && test "$first" != "$image"; then
+                echo "Service $service has mixed image versions" >&2
+                return 1
+            fi
+            first="$image"
+            printf '%s\n' "$image" >> "$backup/runtime-ids"
+        done
+        jq --arg service "$service" --arg image "$first" \
+            '.services[$service].image = $image' "$backup/images.yml" > "$backup/images.yml.new"
+        mv "$backup/images.yml.new" "$backup/images.yml"
+    done
+    backup_references "$backup/refs" "$backup"
+    cat "$backup/runtime-ids" >> "$backup/ids"
+    save_backup "$backup"
+}
+
+app_restore() {
+    local backup="$2" id ref
+    test -f "$backup/tags" || { echo "Missing image backup: $backup" >&2; return 1; }
+    if test -f "$backup/images.tar"; then
+        $docker_cmd image load -i "$backup/images.tar"
+    elif test -s "$backup/ids"; then
+        echo "Missing image archive: $backup" >&2
+        return 1
+    fi
+    while read -r id ref; do
+        test -n "$id" || continue
+        $docker_cmd image tag "$id" "$ref"
+    done < "$backup/tags"
+}
+
+validate_health_settings() {
+    case "${APP_HEALTHCHECK_ENABLED:-no}" in
+        no) return 0 ;;
+        yes) ;;
+        *) echo "APP_HEALTHCHECK_ENABLED must be yes or no" >&2; return 1 ;;
+    esac
+    case "${APP_HEALTHCHECK_TIMEOUT:-60}:${APP_HEALTHCHECK_INTERVAL:-2}" in
+        *[!0-9:]*|:*|*:) echo "Invalid health-check timing" >&2; return 1 ;;
+    esac
+    test "${APP_HEALTHCHECK_TIMEOUT:-60}" -gt 0 && test "${APP_HEALTHCHECK_INTERVAL:-2}" -gt 0 || return 1
+}
+
+app_healthy() {
+    local application_name="$1" manifests_dir="$2"
+    local services service ids id state ready deadline now
+    validate_health_settings
+    test "${APP_HEALTHCHECK_ENABLED:-no}" = yes || return 0
+    deadline=$(($(date +%s) + ${APP_HEALTHCHECK_TIMEOUT:-60}))
+    services=$(docker_compose_cmd "$manifests_dir" --project-name "$application_name" config --services)
+    test -n "$services" || { echo "No services to check" >&2; return 1; }
+    while :; do
+        ready=yes
+        for service in $services; do
+            ids=$(service_containers "$application_name" "$service")
+            test -n "$ids" || ready=no
+            for id in $ids; do
+                state=$($docker_cmd inspect "$id")
+                if ! printf '%s\n' "$state" | jq -e '.[0] |
+                    if .Config.Labels["io.ci4rail.mender.oneshot"] == "true" then
+                        .State.Status == "exited" and .State.ExitCode == 0
+                    else
+                        .State.Running == true and (.State.Restarting != true) and
+                        (.State.Paused != true) and
+                        ((.State.Health.Status // "healthy") == "healthy")
+                    end' >/dev/null; then
+                    ready=no
+                fi
+            done
+        done
+        test "$ready" = yes && return 0
+        now=$(date +%s)
+        if test "$now" -ge "$deadline"; then
+            echo "Application $application_name did not become ready within ${APP_HEALTHCHECK_TIMEOUT:-60}s" >&2
+            return 1
+        fi
+        sleep "${APP_HEALTHCHECK_INTERVAL:-2}"
+    done
+}
+
+app_rollout() {
+    local application_name="$1" manifests_dir="$2" rc
+    if docker_compose_cmd "$manifests_dir" --project-name "$application_name" \
+        up -d --remove-orphans > "$manifests_dir/compose.log" 2>&1; then
+        app_healthy "$application_name" "$manifests_dir"
+    else
+        rc=$?
+        cat "$manifests_dir/compose.log" >&2
+        return "$rc"
+    fi
 }
 
 app_stop() {
-    local application_name="$1"
-    local manifests_dir="$2"
-
-    docker_compose_cmd  $manifests_dir\
-        --project-name "$application_name" \
-        down >> "$manifests_dir"/compose.log 2>&1
+    docker_compose_cmd "$2" --project-name "$1" down >> "$2/compose.log" 2>&1
 }
 
 app_requirements() {
-    local rc=0
-    $docker_cmd --version > /dev/null < /dev/null 2>&1
-    rc=$?
-    if test $rc -ne 0; then
-        echo "error: cannot find command \"${docker_cmd}\" in PATH"
-        echo "error: is Docker installed?"
-        return $rc
-    fi
-    $docker_cmd version > /dev/null
-    rc=$?
-    if test $rc -ne 0; then
-        echo "error: failed to connect with the Docker API"
-    else
-        _discover_compose
-        rc=$?
-    fi
-    return $rc
+    validate_health_settings
+    $docker_cmd version >/dev/null
+    command -v jq >/dev/null
+    _discover_compose
 }
 
 case "$1" in
-    SAVE)
-        shift
-        app_save "$@"
+    SAVE) shift; app_save "$@" ;;
+    LOAD) shift; app_load "$@" ;;
+    ROLLOUT) shift; app_rollout "$@" ;;
+    STOP) shift; app_stop "$@" ;;
+    ENSURE_ABSENT)
+        ids=$($docker_cmd ps -aq --filter "label=com.docker.compose.project=$2")
+        if test -n "$ids"; then
+            echo "Project $2 exists without managed manifests; cannot guarantee rollback" >&2
+            exit 1
+        fi
         ;;
-    LOAD)
-        shift
-        app_load "$@"
-        ;;
-    ROLLOUT)
-        shift
-        app_rollout "$@"
-        ;;
-    STOP)
-        shift
-        app_stop "$@"
-        ;;
-    EXPORT_MANIFEST)
-        true
-        ;;
-    LS_COMPONENTS)
-        true
-        ;;
-    DELETE)
-        shift
-        echo "docker-compose:running:$docker_cmd image rm $1"
-        $docker_cmd image rm "$1"
-        ;;
+    VALIDATE) shift; app_validate "$@" ;;
+    RESOLVE) shift; app_resolve "$@" ;;
+    SNAPSHOT) shift; app_snapshot "$@" ;;
+    BACKUP_IMAGES) shift; backup_references "$1" "$2"; save_backup "$2" ;;
+    RESTORE) shift; app_restore "$@" ;;
     ROLLBACK)
         shift
-        app_stop "$1" "$3" || exit $?
-        app_rollout "$1" "$3"
+        app_stop "$1" "$3"
+        app_rollout "$1" "$2/manifests"
         ;;
-    PURGE)
-        true
-        ;;
-    START)
-        true
-        ;;
-    ALIVE)
-        true
-        ;;
-    HEALTHY)
-        true
-        ;;
-    REQS)
-        shift
-        app_requirements
-        ;;
-    *)
-        echo "ERROR: unknown API call: $@"
-        exit 1
-        ;;
+    HEALTHY|ALIVE) shift; app_healthy "$@" ;;
+    REQS) app_requirements ;;
+    EXPORT_MANIFEST|LS_COMPONENTS|PURGE|START) true ;;
+    DELETE) shift; $docker_cmd image rm "$1" ;;
+    *) echo "ERROR: unknown API call: $*" >&2; exit 1 ;;
 esac

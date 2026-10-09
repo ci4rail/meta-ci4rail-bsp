@@ -13,284 +13,260 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+# CI4Rail: persistent transactions, recoverable across separate Mender calls.
 set -e
+umask 077
 
 STATE="$1"
 FILES="$2"
-
-temp_dir="$FILES"/tmp
-
-cleanup() {
-    set +e
-    test -f "$PERSISTENT_STORE"/.rw_test && rm -f "$PERSISTENT_STORE"/.rw_test
-}
-
-trap cleanup 1 2 3 6 15
-
-CONFIG_FILE="/etc/mender/mender-app.conf"
+CONFIG_FILE="${MENDER_APP_CONFIG_FILE:-/etc/mender/mender-app.conf}"
 PERSISTENT_STORE="/data/mender-app"
 APP_MODULE_DIR="/usr/share/mender/app-modules/v1"
-
-version=""
-orchestrator=""
-platform=""
-app_sub_module=""
-artifact_name=""
-application_name=""
-options=""
-
+APP_HEALTHCHECK_ENABLED=no
+APP_HEALTHCHECK_TIMEOUT=60
+APP_HEALTHCHECK_INTERVAL=2
 if test -f "$CONFIG_FILE"; then
     . "$CONFIG_FILE"
 fi
+export APP_HEALTHCHECK_ENABLED APP_HEALTHCHECK_TIMEOUT APP_HEALTHCHECK_INTERVAL
 
-if test -d "$PERSISTENT_STORE"; then
-    if touch "$PERSISTENT_STORE"/.rw_test; then
-        rm -f "$PERSISTENT_STORE"/.rw_test
-    else
-        echo "ERROR: cant write to persistent_store in $PERSISTENT_STORE"
-        exit 1
-    fi
-fi
+temp_dir="$FILES/tmp"
+transaction=""
 
-CONFIG_HAS_XDELTA3_CMD="xdelta3"
-CONFIG_HAS_TAR_CMD="tar"
-delta_cmd="${CONFIG_HAS_XDELTA3_CMD} -d -s"
-tar_decompress_cmd="${CONFIG_HAS_TAR_CMD} -xzvf"
+fail() { echo "ERROR: $*" >&2; exit 1; }
 
-assert_requirements() {
-    local cmd
-    local rc=0
-    set +e
-
-    if ! $CONFIG_HAS_TAR_CMD --version < /dev/null > /dev/null 2>&1; then
-        echo "error: cannot find required command '${CONFIG_HAS_TAR_CMD}' in PATH." 1>&2
-        rc=127
-    fi
-    if ! $CONFIG_HAS_XDELTA3_CMD < /dev/null > /dev/null 2>&1; then
-        echo "warning: cannot find command '${CONFIG_HAS_XDELTA3_CMD}' in PATH." 1>&2
-    fi
-    $app_sub_module REQS
-    if test $? -ne 0; then
-        rc=1
-    fi
-    set -e
-    return $rc
+# Rename and sync before changing runtime state. Markers describe intent, so an
+# interruption on either side of a rename can be recovered by examining paths.
+mark() {
+    : > "$transaction/$1.new"
+    mv "$transaction/$1.new" "$transaction/$1"
+    sync
 }
 
 parse_metadata() {
-    application_name=$(jq -r .application_name < "$1")
-    platform=$(jq -r .platform < "$1")
+    application_name=$(jq -er '.application_name | strings | select(test("^[a-z0-9][a-z0-9_-]*$"))' "$1") || fail "Invalid application_name"
+    orchestrator=$(jq -er '.orchestrator | select(. == "docker-compose")' "$1") || fail "Unsupported orchestrator"
+    platform=$(jq -er '.platform | strings | select(length > 0)' "$1") || fail "Invalid platform"
+    jq -e '.version != null' "$1" >/dev/null || fail "Missing metadata version"
     export MENDER_APP_UPDATE_MODULE_PLATFORM="$platform"
-    orchestrator=$(jq -r .orchestrator < "$1")
-    version=$(jq -r .version < "$1")
-    app_sub_module="${APP_MODULE_DIR}/${orchestrator}"
-    if test ! -f "${app_sub_module}"; then
-        echo "ERROR: ${app_sub_module} not found. exiting."
-        return 1
-    fi
-    if test ! -x "${app_sub_module}"; then
-        echo "ERROR: ${app_sub_module} not executable. exiting."
-        return 1
-    fi
-    if test ! -r "${app_sub_module}"; then
-        echo "ERROR: ${app_sub_module} not readable. exiting."
-        return 1
-    fi
-    artifact_name=$(jq -r .artifact_provides.artifact_name < "$2")
-
-    if test "${application_name}" = ""; then
-        echo "ERROR: application_name is required. exiting."
-        return 1
-    fi
-
-    if test "${platform}" = ""; then
-        echo "ERROR: platform is required. exiting."
-        return 1
-    fi
-
-    if test "${orchestrator}" = ""; then
-        echo "ERROR: orchestrator is required. exiting."
-        return 1
-    fi
-
-    if test "${version}" = ""; then
-        echo "ERROR: version is required. exiting."
-        return 1
-    fi
-
-    if test "${artifact_name}" = ""; then
-        echo "ERROR: artifact_name is required. exiting."
-        return 1
-    fi
-    $(jq -r 'select(.env != null) | .env | keys[] as $k | "export \($k)=\(.[$k])"' < "$1" 2> /dev/null)
+    app_sub_module="$APP_MODULE_DIR/$orchestrator"
+    test -x "$app_sub_module" || fail "Missing app module: $app_sub_module"
+    # Compose interpolation and runtime settings remain artifact-configurable.
+    # Import values as data, preserving spaces and avoiding eval/word splitting.
+    jq -e '(.env // {}) | type == "object"' "$1" >/dev/null || fail "Invalid artifact environment"
+    # jq -r keys[] emits one name per line; validate names before shell iteration.
+    jq -e '(.env // {}) | keys | all(.[]; test("^[A-Z_][A-Z0-9_]*$"))' "$1" >/dev/null || fail "Invalid environment variable name"
+    keys=$(jq -r '(.env // {}) | keys[]' "$1")
+    for key in $keys; do
+        case "$key" in
+            STATE|FILES|CONFIG_FILE|PERSISTENT_STORE|APP_MODULE_DIR|MENDER_APP_*|APP_HEALTHCHECK_*|PATH|ENV|BASH_ENV)
+                fail "Artifact cannot override module setting: $key" ;;
+        esac
+        value=$(jq -er --arg key "$key" '.env[$key] | strings' "$1") || fail "Invalid environment value: $key"
+        export "$key=$value"
+    done
+    app_dir="$PERSISTENT_STORE/$application_name"
+    lock="$PERSISTENT_STORE/.transactions/$application_name.lock"
 }
 
-clean_up() {
-    local app_dir="$1"
+begin_transaction() {
+    mkdir -p "$temp_dir" "$PERSISTENT_STORE/.transactions"
+    test ! -e "$temp_dir/app-transaction" || fail "Transaction already started; roll back or commit it first"
+    test ! -L "$lock" || fail "Unresolved transaction: $(readlink "$lock")"
+    transaction=$(mktemp -d "$PERSISTENT_STORE/.transactions/txn.XXXXXXXX")
+    cp "$FILES/header/meta-data" "$transaction/meta-data"
+    # Persist effective settings for subsequent invocations and reboot recovery.
+    for key in APP_HEALTHCHECK_ENABLED APP_HEALTHCHECK_TIMEOUT APP_HEALTHCHECK_INTERVAL DOCKER_COMMAND DOCKER_COMPOSE_COMMAND XDELTA_COMMAND XDELTA_ARGS; do
+        printenv "$key" > "$transaction/$key" || true
+    done
+    printf '%s\n' "$transaction" > "$temp_dir/app-transaction.new"
+    mv "$temp_dir/app-transaction.new" "$temp_dir/app-transaction"
+    sync
+    if ! ln -sT "$transaction" "$lock"; then
+        rm -f "$temp_dir/app-transaction"
+        rm -rf "$transaction"
+        fail "Another transaction owns $application_name"
+    fi
+    sync
+}
 
-    if test -f "$app_dir"/images/urls; then
-        xargs -I{} $app_sub_module DELETE {} < "$app_dir"/images/urls
+load_transaction() {
+    test -f "$temp_dir/app-transaction" || return 1
+    transaction=$(cat "$temp_dir/app-transaction")
+    case "$transaction" in "$PERSISTENT_STORE"/.transactions/txn.*) ;; *) fail "Invalid transaction path" ;; esac
+    test -d "$transaction" || fail "Missing rollback transaction: $transaction"
+    parse_metadata "$transaction/meta-data"
+    for key in APP_HEALTHCHECK_ENABLED APP_HEALTHCHECK_TIMEOUT APP_HEALTHCHECK_INTERVAL DOCKER_COMMAND DOCKER_COMPOSE_COMMAND XDELTA_COMMAND XDELTA_ARGS; do
+        if test -s "$transaction/$key"; then
+            value=$(cat "$transaction/$key")
+            export "$key=$value"
+        fi
+    done
+    if test "$(readlink "$lock")" != "$transaction"; then
+        if test "$STATE" = Cleanup && test -f "$transaction/cleanup-started"; then
+            return 0
+        fi
+        # Interrupted after persisting the pointer but before acquiring the lock:
+        # no runtime changes have occurred yet, so finish acquiring it to clean up.
+        if test ! -f "$transaction/prepared" && test ! -L "$lock"; then
+            ln -sT "$transaction" "$lock" || fail "Transaction lock mismatch"
+        else
+            fail "Transaction lock mismatch"
+        fi
     fi
 }
 
-handle_artifact() {
-    local image_dir
-    local image
-    local url_new
-    local url_current
-    local sha_new
-    local sha_current
-    local image_current
-    local image_new
-    local deep_delta
-    local rollback_id="last"
-    local rc=0
+install_artifact() {
+    parse_metadata "$FILES/header/meta-data"
+    "$app_sub_module" REQS
+    begin_transaction
+    mkdir -p "$transaction/next/images" "$transaction/unpack"
+    tar -xzf "$FILES/files/images.tar.gz" -C "$transaction/unpack"
+    tar -xzf "$FILES/files/manifests.tar.gz" -C "$transaction/next"
+    test -d "$transaction/next/manifests" || fail "Missing manifests"
+    for reserved in .mender-compose.yml .mender-images.yml; do
+        test ! -e "$transaction/next/manifests/$reserved" || fail "Reserved manifest filename: $reserved"
+    done
+    "$app_sub_module" VALIDATE "$application_name" "$transaction/next/manifests"
 
-    if test ! -d "$temp_dir"; then
-        echo "ERROR: temp_dir does not exist"
-        return 1
+    if test -d "$app_dir"; then
+        test -d "$app_dir/manifests" || fail "Existing application has no manifests"
+        # Snapshot before loading even one new image: loading can move tags.
+        "$app_sub_module" SNAPSHOT "$application_name" "$app_dir/manifests" "$transaction/backup"
+        mark had-previous
+    else
+        "$app_sub_module" ENSURE_ABSENT "$application_name"
     fi
-
-    echo "decompressing images"
-    $tar_decompress_cmd "$1"/images.tar.gz -C "$temp_dir"
-    echo "decompressing manifests"
-    $tar_decompress_cmd "$1"/manifests.tar.gz -C "$temp_dir"
-
-    echo "unpacking images"
-    for image_dir in "${temp_dir}/images/"*; do
-        echo "unpacking $image_dir"
-        url_new=$(cat "${image_dir}/url-new.txt")
-        url_current=$(cat "${image_dir}/url-current.txt")
-        sha_new=$(cat "${image_dir}/sums-new.txt")
-        sha_current=$(cat "${image_dir}/sums-current.txt")
-        if test "$url_new" = ""; then
-            echo "ERROR: payload ${image_dir}/url-new.txt cannot be empty"
-            return 1
-        fi
-        if test "$sha_new" = ""; then
-            echo "ERROR: sha_new cannot be empty"
-            return 1
-        fi
-
-        if test "$url_new" != "$url_current"; then
-            if test "$url_current" = ""; then
-                echo "ERROR: url_current cannot be empty"
-                return 1
-            fi
-            if test "$sha_current" = ""; then
-                echo "ERROR: sha_ccurrent cannot be empty"
-                return 1
-            fi
-            if test ! -f "${image_dir}/deep_delta"; then
-                # deep-delta means that the binary delta was generated at the layers level,
-                # and the orchestrators submodule will deal with decoding during the LOAD below
-                # ref. to LOAD implementations
-                image_current="${temp_dir}/current.${sha_current}.img"
-                image_new="${temp_dir}/new.${sha_new}.img"
-                $app_sub_module SAVE "${application_name}" "$url_current" "$image_current"
-                $delta_cmd "$image_current" "${image_dir}/image.img" "${image_new}"
-                mv -v "${image_new}" "${image_dir}/image.img"
-            fi
+    : > "$transaction/incoming-refs"
+    for image_dir in "$transaction/unpack/images/"*; do
+        test -d "$image_dir" || continue
+        cat "$image_dir/url-new.txt" >> "$transaction/incoming-refs"
+        printf '\n' >> "$transaction/incoming-refs"
+    done
+    "$app_sub_module" BACKUP_IMAGES "$transaction/incoming-refs" "$transaction/incoming-backup"
+    mark prepared
+    # Decode every ordinary delta before LOAD can move a shared base-image tag.
+    for image_dir in "$transaction/unpack/images/"*; do
+        test -d "$image_dir" || continue
+        url_new=$(cat "$image_dir/url-new.txt")
+        url_current=$(cat "$image_dir/url-current.txt")
+        test -n "$url_new" || fail "Empty image reference"
+        test -s "$image_dir/sums-new.txt" || fail "Missing image checksum"
+        if test ! -f "$image_dir/deep_delta" && test "$url_new" != "$url_current"; then
+            test -n "$url_current" || fail "Delta has no base image"
+            "$app_sub_module" SAVE "$application_name" "$url_current" "$transaction/base.img"
+            ${XDELTA_COMMAND:-xdelta3} ${XDELTA_ARGS:--d -s} "$transaction/base.img" "$image_dir/image.img" "$transaction/new.img"
+            mv "$transaction/new.img" "$image_dir/image.img"
+            rm -f "$transaction/base.img"
         fi
     done
-    if test -d "${PERSISTENT_STORE}/${application_name}"; then
-        echo "copying existing composition to -previous"
-        rm -Rf "${PERSISTENT_STORE}/${application_name}-previous"
-        mv -v "${PERSISTENT_STORE}/${application_name}" "${PERSISTENT_STORE}/${application_name}-previous"
-    else
-        echo "no previous composition found"
-    fi
-    mkdir -pv "${PERSISTENT_STORE}/${application_name}"/images
-    rm -vf "${PERSISTENT_STORE}/${application_name}"/images/*
-    for image_dir in "${temp_dir}/images/"*; do
-        echo "scanning ${image_dir}"
-        url_current=$(cat "${image_dir}/url-current.txt")
-        url_new=$(cat "${image_dir}/url-new.txt")
-        sha_new=$(cat "${image_dir}/sums-new.txt")
-        deep_delta=""
-        if test -f "${image_dir}/deep_delta"; then
-            deep_delta=deep_delta
-        fi
-        MODULE_TMPDIR="${temp_dir}" OPTIONS="${deep_delta}" $app_sub_module LOAD "${application_name}" "${url_new}" "${image_dir}/image.img" "${url_current}"
-        # and the sub module deals with proper image loading
-        # we save the image urls and shasums in order to be able to clean up
-        echo "${url_new}" >> "${PERSISTENT_STORE}/${application_name}"/images/urls
-        echo "${sha_new}" >> "${PERSISTENT_STORE}/${application_name}"/images/shas
+    for image_dir in "$transaction/unpack/images/"*; do
+        test -d "$image_dir" || continue
+        url_new=$(cat "$image_dir/url-new.txt")
+        url_current=$(cat "$image_dir/url-current.txt")
+        options=""
+        if test -f "$image_dir/deep_delta"; then options=deep_delta; fi
+        MODULE_TMPDIR="$transaction/unpack" OPTIONS="$options" "$app_sub_module" LOAD "$application_name" "$url_new" "$image_dir/image.img" "$url_current"
+        printf '%s\n' "$url_new" >> "$transaction/next/images/urls"
+        sha_new=$(cat "$image_dir/sums-new.txt")
+        printf '%s\n' "$sha_new" >> "$transaction/next/images/shas"
     done
-    # we should check if the app is healthy and alive, then decide what to do
-    # at the moment we assume it is alive and ok
-    if test -d "${PERSISTENT_STORE}/${application_name}-previous"; then
-        echo "stopping ${PERSISTENT_STORE}/${application_name}-previous/manifests"
-        $app_sub_module STOP "${application_name}" "${PERSISTENT_STORE}/${application_name}-previous/manifests"
-    else
-        echo "-previous composition not present; nothing to stop."
+
+    mark switching
+    if test -f "$transaction/had-previous"; then
+        "$app_sub_module" STOP "$application_name" "$app_dir/manifests"
+        mv "$app_dir" "$transaction/previous"
+        sync
     fi
-    mv -v "$temp_dir/manifests" "${PERSISTENT_STORE}/${application_name}/"
-    echo "rolling out ${PERSISTENT_STORE}/${application_name}/manifests"
-    set +e
-    $app_sub_module ROLLOUT "${application_name}" "${PERSISTENT_STORE}/${application_name}/manifests" 2>&1
-    if test $? -eq 0; then
-        echo "successful rollout"
-        if test -d "${PERSISTENT_STORE}/${application_name}-${rollback_id}"; then
-            echo "cleaning up -${rollback_id}"
-            clean_up "${PERSISTENT_STORE}/${application_name}-${rollback_id}" # clean up call automatically removes the images in by reference taken from clen-up subdirectory, it relies on the fact that we save them there
-            echo "cleaning up -previous"
-            clean_up "${PERSISTENT_STORE}/${application_name}-previous" # clean up the composition that was running just now
-        else
-            echo "successful rollout: nothing to clean"
-        fi
-        rm -Rfv "${PERSISTENT_STORE}/${application_name}-previous"
-        # save_rollback "${PERSISTENT_STORE}/${application_name}-${rollback_id}" # saves the current images ids and manifests as new rollback state. this can be just cp -a "${PERSISTENT_STORE}/${application_name} "${PERSISTENT_STORE}/${application_name}-${rollback_id}"
-        echo "saving data for rollback"
-        rm -Rfv "${PERSISTENT_STORE}/${application_name}-${rollback_id}"
-        cp -va "${PERSISTENT_STORE}/${application_name}" "${PERSISTENT_STORE}/${application_name}-${rollback_id}"
-        echo "successfully saved rollback data"
-    else
-        echo "unsuccessful rollout"
-        rc=8
-        clean_up "${PERSISTENT_STORE}/${application_name}"
-        $app_sub_module ROLLBACK "${application_name}" "${PERSISTENT_STORE}/${application_name}-${rollback_id}" "${PERSISTENT_STORE}/${application_name}/manifests"
-        if test $? -eq 0; then
-            echo "successful rollback"
-            rc=80
-        else
-            echo "unsuccessful rollback trying to rollout the composition we saw when we started"
-            $app_sub_module ROLLOUT "${application_name}" "${PERSISTENT_STORE}/${application_name}-previous/manifests"
-            if test $? -eq 0; then
-                echo "successfully rolled out ${PERSISTENT_STORE}/${application_name}-previous"
-                rc=82
-            else
-                echo "rollout of ${PERSISTENT_STORE}/${application_name}-previous was unsuccessful; deployment failed; rollout attempts failed."
-                rc=84
+    mv "$transaction/next" "$app_dir"
+    sync
+    "$app_sub_module" RESOLVE "$application_name" "$app_dir/manifests"
+    mark starting
+    "$app_sub_module" ROLLOUT "$application_name" "$app_dir/manifests"
+    mark installed
+}
+
+rollback_artifact() {
+    if test -f "$transaction/rolled-back"; then
+        return 0
+    fi
+    mark rollback-started
+    # Before 'prepared' no images or containers have been changed.
+    if test ! -f "$transaction/prepared"; then
+        mark rolled-back
+        return 0
+    fi
+    if test -f "$transaction/switching"; then
+        # If next still exists it has not been activated. In particular do not
+        # mistake the untouched old directory for the failed new deployment.
+        if test ! -d "$transaction/next" && test -d "$app_dir" && test ! -f "$transaction/restoring"; then
+            if test -f "$transaction/starting"; then
+                "$app_sub_module" STOP "$application_name" "$app_dir/manifests"
             fi
+            mv "$app_dir" "$transaction/failed"
+            sync
+        fi
+        mark restoring
+    fi
+    "$app_sub_module" RESTORE "$application_name" "$transaction/incoming-backup"
+    if test -f "$transaction/had-previous"; then
+        "$app_sub_module" RESTORE "$application_name" "$transaction/backup"
+        if test -d "$transaction/previous"; then
+            test ! -e "$app_dir" || fail "Cannot restore over existing application"
+            mv "$transaction/previous" "$app_dir"
+            sync
+        fi
+        test -d "$app_dir/manifests" || fail "Previous manifests are missing"
+        # A resolved composition and an image-ID override ensure that old env
+        # values, moved tags and digest references all resolve to the old image.
+        cp "$transaction/backup/compose.yml" "$app_dir/manifests/.mender-compose.yml.new"
+        mv "$app_dir/manifests/.mender-compose.yml.new" "$app_dir/manifests/.mender-compose.yml"
+        cp "$transaction/backup/images.yml" "$app_dir/manifests/.mender-images.yml.new"
+        mv "$app_dir/manifests/.mender-images.yml.new" "$app_dir/manifests/.mender-images.yml"
+        sync
+        if test -f "$transaction/switching"; then
+            "$app_sub_module" ROLLOUT "$application_name" "$app_dir/manifests"
         fi
     fi
-    set -e
-    return $rc
+    mark rolled-back
+}
+
+cleanup_transaction() {
+    # Keep evidence and backups when rollback failed. The per-app lock prevents
+    # the next deployment from overwriting the only recoverable state.
+    if test ! -f "$transaction/rolled-back" && { test ! -f "$transaction/committed" || test -f "$transaction/rollback-started"; }; then
+        echo "Retaining unresolved transaction: $transaction" >&2
+        return 0
+    fi
+    # No global image deletion: images/tags can belong to other applications.
+    # Only transaction archives and manifests are ours to remove.
+    mark cleanup-started
+    if test "$(readlink "$lock")" = "$transaction"; then
+        rm -f "$lock"
+    fi
+    rm -f "$temp_dir/app-transaction"
+    sync
+    rm -rf "$transaction"
 }
 
 case "$STATE" in
-
-    NeedsArtifactReboot)
-        echo "No"
-        ;;
-
-    SupportsRollback)
-        echo "No" # switch to Yes on MEN-6077
-        ;;
-
-    ArtifactInstall)
-        parse_metadata "$FILES"/header/meta-data "$FILES"/header/header-info
-        assert_requirements
-        rc=$?
-        if test $rc -ne 0; then
-            exit $rc
-        fi
-        handle_artifact "$FILES"/files
-        ;;
-
+    NeedsArtifactReboot) echo No ;;
+    SupportsRollback) echo Yes ;;
+    ArtifactInstall) install_artifact ;;
     ArtifactRollback)
-        true
+        if load_transaction; then rollback_artifact; fi
         ;;
-
+    ArtifactCommit)
+        if load_transaction; then
+            test -f "$transaction/installed" || fail "Cannot commit an incomplete installation"
+            test ! -f "$transaction/rolled-back" || fail "Cannot commit a rolled-back installation"
+            "$app_sub_module" HEALTHY "$application_name" "$app_dir/manifests"
+            mark committed
+        else
+            fail "No installation to commit"
+        fi
+        ;;
+    Cleanup)
+        if load_transaction; then cleanup_transaction; fi
+        ;;
 esac
