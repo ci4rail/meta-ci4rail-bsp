@@ -5,6 +5,14 @@ HOMEPAGE = "https://github.com/ci4rail/ttynvt-runner"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
+inherit go-prebuilt-clearing
+
+SRC_URI[clearing_source.sha256sum] = "b831778fbc49f71c43a5ca2c72e40fa0b7b3a4ed9395d0283bc66a9ead7776e1"
+GO_CLEARING_SOURCE_DIR = "${WORKDIR}/clearing-source/ttynvt-runner-${PV}"
+GO_CLEARING_BINARIES = "${WORKDIR}/ttynvt-runner"
+GO_CLEARING_GO_VERSION = "go1.18.4"
+GO_CLEARING_GO_SHA256 = "4525aa6b0e3cecb57845f4060a7075aafc9ab752bb7b6b4cf8a212d43078e1e4"
+
 COMPATIBLE_HOST = "(i.86|x86_64|aarch64|arm).*-linux"
 
 # Set SRC_URI subdir to ${P} so that files are unpacked into ${S}
@@ -13,7 +21,7 @@ SRC_URI:arm = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}
 SRC_URI_i586 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
 SRC_URI_i686 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-386.tar.gz;name=386"
 SRC_URI:aarch64 = "https://github.com/ci4rail/ttynvt-runner/releases/download/v${PV}/${BPN}-v${PV}-linux-arm64.tar.gz;name=arm64"
-SRC_URI:append = " file://${BPN}.service"
+SRC_URI:append = " https://github.com/ci4rail/ttynvt-runner/archive/refs/tags/v${PV}.tar.gz;name=clearing_source;downloadfilename=${BPN}-${PV}-source.tar.gz;subdir=clearing-source file://${BPN}.service"
 
 # Use github-release-checksums.sh script in yoct-images repo to update
 SRC_URI[386.md5sum] = "5558db692f2136500cfd6f35b4d2c216"
