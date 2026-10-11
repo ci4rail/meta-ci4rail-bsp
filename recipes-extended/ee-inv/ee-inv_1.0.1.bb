@@ -5,6 +5,15 @@ HOMEPAGE = "https://github.com/ci4rail/ee-inv-cli"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
+inherit go-prebuilt-clearing
+
+SRC_URI:append = " https://github.com/ci4rail/ee-inv-cli/archive/refs/tags/v${PV}.tar.gz;name=clearing_source;downloadfilename=${BPN}-${PV}-source.tar.gz;subdir=clearing-source"
+SRC_URI[clearing_source.sha256sum] = "7812a5086eef8592693926baa88bc8b7da9930890d714c8c2d23de56aa3687ae"
+GO_CLEARING_SOURCE_DIR = "${WORKDIR}/clearing-source/ee-inv-cli-${PV}"
+GO_CLEARING_BINARIES = "${WORKDIR}/ee-inv"
+GO_CLEARING_GO_VERSION = "go1.23.2"
+GO_CLEARING_GO_SHA256 = "36930162a93df417d90bd22c6e14daff4705baac2b02418edda671cdfa9cd07f"
+
 COMPATIBLE_HOST = "(x86_64|aarch64|arm).*-linux"
 
 # Set SRC_URI subdir to ${P} so that files are unpacked into ${S}

@@ -5,6 +5,15 @@ HOMEPAGE = "https://github.com/ci4rail/io4edge-client-go"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
+inherit go-prebuilt-clearing
+
+SRC_URI:append = " https://github.com/ci4rail/io4edge-client-go/archive/refs/tags/v${PV}.tar.gz;name=clearing_source;downloadfilename=${BPN}-${PV}-source.tar.gz;subdir=clearing-source"
+SRC_URI[clearing_source.sha256sum] = "d63f6df9a8d8953e60f2ce5d32012b9327d52c3eea30e3bc3110a8d925b421ee"
+GO_CLEARING_SOURCE_DIR = "${WORKDIR}/clearing-source/io4edge-client-go-${PV}"
+GO_CLEARING_BINARIES = "${WORKDIR}/io4edge-cli"
+GO_CLEARING_GO_VERSION = "go1.17.5"
+GO_CLEARING_GO_SHA256 = "3defb9a09bed042403195e872dcbc8c6fae1485963332279668ec52e80a95a2d"
+
 COMPATIBLE_HOST = "(i.86|x86_64|aarch64|arm).*-linux"
 
 # Set SRC_URI subdir to ${P} so that files are unpacked into ${S}
