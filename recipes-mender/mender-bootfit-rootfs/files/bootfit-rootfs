@@ -32,6 +32,9 @@ load_config() {
     # shellcheck source=/dev/null
     . "${CONFIG_FILE}"
 
+    # Older installed configurations use the standard Mender hex selector.
+    BOOT_SLOT_HEX_ENV="${BOOT_SLOT_HEX_ENV:-mender_boot_part_hex}"
+
     for name in \
         BOOTFIT_PART ROOTFS_PART_A ROOTFS_PART_B \
         BOOT_SLOT_ENV SLOT_A_VALUE SLOT_B_VALUE UPGRADE_ENV BOOTCOUNT_ENV \
@@ -201,6 +204,7 @@ activate_passive_slot() {
     save_original_slot "${active_slot}"
     "${SETENV}" -s - <<EOF
 ${BOOT_SLOT_ENV}=${passive_slot}
+${BOOT_SLOT_HEX_ENV}=$(printf '%x' "${passive_slot}")
 ${UPGRADE_ENV}=1
 ${BOOTCOUNT_ENV}=0
 EOF
@@ -211,6 +215,7 @@ restore_original_slot() {
     original_slot="$(cat "${FILES}/tmp/original-slot")"
     "${SETENV}" -s - <<EOF
 ${BOOT_SLOT_ENV}=${original_slot}
+${BOOT_SLOT_HEX_ENV}=$(printf '%x' "${original_slot}")
 ${UPGRADE_ENV}=0
 ${BOOTCOUNT_ENV}=0
 EOF
@@ -278,11 +283,15 @@ case "${STATE}" in
             fail "new boot did not select the updated slot"
         test "$(env_value "${UPGRADE_ENV}")" = "1" ||
             fail "${UPGRADE_ENV} is not set after the update boot"
+        select_slots
+        check_active_root
         verify_dm_verity_root
         ;;
 
     ArtifactCommit)
         load_config
+        select_slots
+        check_active_root
         verify_dm_verity_root
         test "$(env_value "${UPGRADE_ENV}")" = "1" ||
             fail "${UPGRADE_ENV} is not set while committing"
@@ -302,6 +311,8 @@ case "${STATE}" in
             fail "rollback did not restore the previous boot slot"
         test "$(env_value "${UPGRADE_ENV}")" = "0" ||
             fail "${UPGRADE_ENV} remains set after rollback"
+        select_slots
+        check_active_root
         ;;
 
     ArtifactReboot|ArtifactRollbackReboot|ArtifactFailure|Cleanup)
