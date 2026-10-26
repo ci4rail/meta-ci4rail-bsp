@@ -44,6 +44,7 @@ IMAGE_INSTALL += "\
                   exfat-utils \
                   iproute2 \
                   iptables \
+                  nftables-config \
                   libgomp \
                   libgpiod-tools \
                   mtd-utils \

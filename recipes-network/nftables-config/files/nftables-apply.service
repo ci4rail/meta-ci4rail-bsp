@@ -1,0 +1,24 @@
+#
+# Applies a user-provided /etc/nftables.conf (e.g. deployed via os-customization).
+# If the file doesn't exist or is empty, nothing is done.
+# If the file is invalid, the service fails and no rules are applied (fail-open).
+# The rules are intentionally not flushed on stop, to not remove chains created by docker.
+#
+[Unit]
+Description=Apply user-provided /etc/nftables.conf
+Documentation=man:nft(8)
+ConditionFileNotEmpty=/etc/nftables.conf
+DefaultDependencies=no
+After=local-fs.target systemd-modules-load.service
+Before=network-pre.target sysinit.target
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStartPre=/usr/sbin/nft -c -f /etc/nftables.conf
+ExecStart=/usr/sbin/nft -f /etc/nftables.conf
+ExecReload=/usr/sbin/nft -f /etc/nftables.conf
+
+[Install]
+WantedBy=sysinit.target
