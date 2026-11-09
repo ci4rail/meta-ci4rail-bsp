@@ -130,4 +130,5 @@ IMAGE_INSTALL += "\
                   net-snmp-server \
                   net-snmp-dev \
                   moducop-core-api-server \
+                  moducop-user \
                 "
