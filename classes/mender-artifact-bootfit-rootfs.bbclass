@@ -22,7 +22,7 @@ python __anonymous() {
         d.setVar('KEY_VAULT_NAME', match.group(1))
         d.setVar('CI4RAIL_OTA_AZURE_KEY_NAME', match.group(2))
         d.setVar('KEY_VAULT_KEY_VERSION', match.group(3) or '')
-        for name in ('KEY_VAULT_NAME', 'KEY_VAULT_KEY_VERSION', 'AZURE_CLIENT_ID',
+        for name in ('KEY_VAULT_NAME', 'KEY_VAULT_KEY_VERSION', 'CI4RAIL_OTA_AZURE_KEY_NAME', 'AZURE_CLIENT_ID',
                      'AZURE_TENANT_ID', 'AZURE_FEDERATED_TOKEN_FILE', 'AZURE_AUTHORITY_HOST'):
             d.setVarFlag(name, 'export', '1')
         d.setVarFlag('do_image_mender_bootfit_rootfs', 'network', '1')
@@ -99,8 +99,10 @@ IMAGE_CMD:mender-bootfit-rootfs () {
         -o "${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.mender"
 
     if [ "${CI4RAIL_OTA_PROTECTION}" = "1" ]; then
-        if [ -n "${CI4RAIL_OTA_AZURE_KEY_NAME}" ]; then
-            mender-artifact sign --azure-key "${CI4RAIL_OTA_AZURE_KEY_NAME}" \
+        # image.bbclass expands IMAGE_CMD before __anonymous above derives the key
+        # name, so take it from the exported environment at runtime.
+        if [ -n "${CI4RAIL_OTA_AZURE_KEY_ID}" ]; then
+            mender-artifact sign --azure-key "$CI4RAIL_OTA_AZURE_KEY_NAME" \
                 "${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.mender"
         fi
         mender-artifact validate -k "${CI4RAIL_OTA_ARTIFACT_PUBLIC_KEY}" \

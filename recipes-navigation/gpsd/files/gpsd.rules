@@ -1,3 +1,6 @@
 # u-blox AG, u-blox 8 (tested with GNSS Evaluation Kit EKV-M8N) [linux module: cdc_acm]
-# This rules ensures that modemmanager does not claim the device
-ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a8", SYMLINK+="gps%n", TAG+="systemd", ENV{SYSTEMD_WANTS}="gpsdctl@%k.service", ENV{ID_MM_DEVICE_IGNORE}="1"
+# Ensure that modemmanager does not claim the device (set on all devices of the tree)
+ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a8", ENV{ID_MM_DEVICE_IGNORE}="1"
+# Hand only the tty to gpsd. Without the SUBSYSTEM filter, the USB device and its
+# interfaces (e.g. 1-1.2.4, 1-1.2.4:1.0) also get gpsdctl@ units that never resolve.
+SUBSYSTEM=="tty", KERNEL=="ttyACM*", ATTRS{idVendor}=="1546", ATTRS{idProduct}=="01a8", SYMLINK+="gps%n", TAG+="systemd", ENV{SYSTEMD_WANTS}="gpsdctl@%k.service"
