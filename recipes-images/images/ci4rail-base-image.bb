@@ -133,3 +133,10 @@ IMAGE_INSTALL += "\
                   moducop-user \
                   ci4rail-user \
                 "
+
+# CPU01Plus: the 88W8997 has Bluetooth on UART, so mwifiex_sdio needs
+# mrvl/sdiouart8997_combo_v4.bin. linux-firmware-nxp8997-sdio is empty; NXP's
+# package ships the firmware and conflicts with it. CPU01 (Bluetooth over SDIO)
+# uses mrvl/sdsd8997_combo_v4.bin from linux-firmware-sd8997.
+IMAGE_INSTALL:remove:moducop-cpu01plus = "linux-firmware-nxp8997-sdio"
+IMAGE_INSTALL:append:moducop-cpu01plus = " firmware-nxp-wifi-nxp8997-sdio"
