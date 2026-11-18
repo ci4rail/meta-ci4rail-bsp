@@ -6,6 +6,7 @@ SRC_URI:append = " file://0001-moducop-specific-dts.patch \
                    file://0002-add-moducop-dts-to-Makefile.patch \
                    file://0003-reconfigure-moducop-CPU01-ETH0-LED.patch \
                    file://0004-add-moducop-ignition-shutdown-handler-with-char-dev.patch \
+                   file://0005-patches-for-simcom-modem-sim8230.patch \
                    file://modem.cfg \
                    file://eth2.cfg \
                    file://netext.cfg \
