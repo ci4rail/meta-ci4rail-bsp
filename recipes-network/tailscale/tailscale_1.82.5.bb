@@ -3,9 +3,29 @@ DESCRIPTION = "Tailscale client and daemon for Linux from Tailscale pre-built bi
 
 HOMEPAGE = "https://github.com/tailscale/tailscale"
 SECTION = "net"
-LICENSE = "CLOSED"
+# Licenses listed by the v1.82.5 CLI/daemon dependency inventory. The inventory
+# covers multiple platforms, so this conservatively includes all listed licenses.
+LICENSE = "BSD-3-Clause & Apache-2.0 & BSD-2-Clause & ISC & MIT"
+# Vendored from https://github.com/tailscale/tailscale/tree/v1.82.5:
+# LICENSE and licenses/tailscale.md. Refresh both when updating the binaries.
+LIC_FILES_CHKSUM = "\
+    file://${WORKDIR}/LICENSE.tailscale;md5=a672713a9eb730050e491c92edf7984d \
+    file://${WORKDIR}/tailscale-dependencies.md;md5=94f3c508a2deade85d6fe7f33618f735 \
+"
 
 COMPATIBLE_HOST = "(i.86|x86_64|aarch64|arm).*-linux"
+
+inherit go-prebuilt-clearing
+
+SRC_URI[clearing_source.sha256sum] = "09685251057c96b7aa01e62b982a90824559ffd7113c8b69b9fc454c611f40a9"
+GO_CLEARING_SOURCE_DIR = "${WORKDIR}/clearing-source/tailscale-${PV}"
+GO_CLEARING_BINARIES = "${WORKDIR}/${DIRECTORY}/tailscale ${WORKDIR}/${DIRECTORY}/tailscaled"
+GO_CLEARING_GO_VERSION = "go1.24.2"
+# Pinned by go.toolchain.rev in the v1.82.5 source release.
+GO_CLEARING_GO_SOURCE_URL = "https://github.com/tailscale/go/archive/982da8f24fa0504f2214f24b0d68b2febd5983f8.tar.gz"
+GO_CLEARING_GO_SHA256 = "def08ac193acee4477893b382b4fc01184297f5f874f4897e3140881f35e61ce"
+# Official ARM64 binaries include three dependency versions absent from the tag.
+GO_CLEARING_EXTRA_SUMS = "${WORKDIR}/tailscale-binary.go.sum"
 
 DIRECTORY:x86-64 = "${BPN}_${PV}_amd64"
 DIRECTORY:arm = "${BPN}_${PV}_arm"
@@ -28,7 +48,13 @@ SRC_URI[arm64.sha256sum] = "8361aa3bc0cbbfd79363fef4e16b86cb4b8b5b18d186f9bc5c2d
 # SRC_URI[386.md5sum] = "41dfb5b8305d7e4c2b8a2efdf465931e"
 # SRC_URI[386.sha256sum] = "9400aa65dc4f7f6d2c2adcdfb1b9c991fa419e833f528964aa8a65021a5f2a2b"
 
-SRC_URI:append = " file://tailscaled_mod.service"
+SRC_URI:append = " \
+    https://github.com/tailscale/tailscale/archive/refs/tags/v${PV}.tar.gz;name=clearing_source;downloadfilename=${BPN}-${PV}-source.tar.gz;subdir=clearing-source \
+    file://tailscaled_mod.service \
+    file://LICENSE.tailscale \
+    file://tailscale-dependencies.md \
+    file://tailscale-binary.go.sum \
+"
 
 inherit systemd
 
