@@ -5,6 +5,15 @@ HOMEPAGE = "https://github.com/ci4rail/socketcan-io4edge"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${WORKDIR}/LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
+inherit go-prebuilt-clearing
+
+SRC_URI:append = " https://github.com/ci4rail/socketcan-io4edge/archive/refs/tags/v${PV}.tar.gz;name=clearing_source;downloadfilename=${BPN}-${PV}-source.tar.gz;subdir=clearing-source"
+SRC_URI[clearing_source.sha256sum] = "1355f1dd0efc996437ef4d391271954325618b4bc473a0a657b5b85dd4bf3c45"
+GO_CLEARING_SOURCE_DIR = "${WORKDIR}/clearing-source/socketcan-io4edge-${PV}"
+GO_CLEARING_BINARIES = "${WORKDIR}/socketcan-io4edge"
+GO_CLEARING_GO_VERSION = "go1.18.4"
+GO_CLEARING_GO_SHA256 = "4525aa6b0e3cecb57845f4060a7075aafc9ab752bb7b6b4cf8a212d43078e1e4"
+
 COMPATIBLE_HOST = "(i.86|x86_64|aarch64|arm).*-linux"
 
 # Set SRC_URI subdir to ${P} so that files are unpacked into ${S}
