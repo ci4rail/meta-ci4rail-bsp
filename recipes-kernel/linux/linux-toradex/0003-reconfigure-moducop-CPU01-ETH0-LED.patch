@@ -9,11 +9,11 @@ Subject: [PATCH] reconfigure moducop CPU01 ETH0 LED: patch micrel phy driver
  1 file changed, 5 insertions(+)
 
 diff --git a/drivers/net/phy/micrel.c b/drivers/net/phy/micrel.c
-index 2ba914d9d68d9..4113f3ab35d67 100644
+index d6f05b1aed0c5..7eebb39b6be44 100644
 --- a/drivers/net/phy/micrel.c
 +++ b/drivers/net/phy/micrel.c
-@@ -285,6 +285,11 @@ static int kszphy_config_reset(struct phy_device *phydev)
- 	if (priv->led_mode >= 0)
+@@ -592,6 +592,11 @@ static int kszphy_config_reset(struct phy_device *phydev)
+ 	if (priv->type && priv->led_mode >= 0)
  		kszphy_setup_led(phydev, priv->type->led_mode_reg, priv->led_mode);
  
 +	// moducop_cpu01: Use only LED2 as a combined link/act LED
@@ -26,3 +26,4 @@ index 2ba914d9d68d9..4113f3ab35d67 100644
  
 -- 
 2.20.1
+
